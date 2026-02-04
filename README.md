@@ -10,6 +10,8 @@
 
 A CLI tool that transforms large markdown documents into "semantic maps (index + document parts)" for AI analysis and review.
 
+![Input/Output Example](docs/assets/example.png)
+
 ## Use Cases
 
 - **AI Document Review**: Split large markdown files into AI-friendly semantic units to improve review accuracy
