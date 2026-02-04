@@ -2,8 +2,11 @@
 
 [English](./README.md) | [日本語](./README_ja.md)
 
+[![Elvez](https://img.shields.io/badge/Elvez-Product-3F61A7?style=flat-square)](https://elvez.co.jp/)
+[![IXV Ecosystem](https://img.shields.io/badge/IXV-Ecosystem-3F61A7?style=flat-square)](https://elvez.co.jp/ixv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Stars](https://img.shields.io/github/stars/elvezjp/md2map?style=social)](https://github.com/elvezjp/md2map/stargazers)
 
 A CLI tool that transforms large markdown documents into "semantic maps (index + document parts)" for AI analysis and review.
 
@@ -14,6 +17,12 @@ A CLI tool that transforms large markdown documents into "semantic maps (index +
 - **Line Number Mapping**: Reliably map AI feedback to original file line numbers
 - **Documentation Management**: Manage large specification documents by splitting them into maintainable parts
 
+## Development Background
+
+This tool was born as a small utility during the development of **IXV (Ixiv)**, an AI development assistant focused on Japanese development documents and specifications.
+
+IXV tackles the challenges of understanding, structuring, and utilizing Japanese documents in system development. This repository publishes a portion of that work as open source.
+
 ## Features
 
 - **Heading-Based Splitting**: Split documents by H1, H2, H3 (and deeper) heading levels
@@ -22,6 +31,13 @@ A CLI tool that transforms large markdown documents into "semantic maps (index +
 - **Japanese Support**: Full support for Japanese document processing and character counting
 - **Code Block Awareness**: Correctly handle headings inside code blocks (skip them)
 - **Dry Run**: Preview generation plan before actual output
+
+## Documents
+
+- [CHANGELOG.md](CHANGELOG.md) - Version history
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+- [SECURITY.md](SECURITY.md) - Security policy
+- [spec.md](spec.md) - Technical specification
 
 ## Setup
 
@@ -34,7 +50,7 @@ A CLI tool that transforms large markdown documents into "semantic maps (index +
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/md2map.git
+git clone https://github.com/elvezjp/md2map.git
 cd md2map
 
 # Install dependencies with uv (virtual environment created automatically)
@@ -170,8 +186,11 @@ md2map/
 ├── tests/                 # Test code
 │   └── fixtures/          # Test fixtures
 ├── docs/                  # Documentation
+├── CHANGELOG.md           # Version history
+├── CONTRIBUTING.md        # Contribution guidelines
 ├── README.md              # This file (English)
 ├── README_ja.md           # Japanese README
+├── SECURITY.md            # Security policy
 ├── spec.md                # Technical specification
 └── pyproject.toml         # Project configuration
 ```
@@ -188,6 +207,30 @@ For details, see [spec.md](spec.md).
 
 - [code2map](https://github.com/elvezjp/code2map) - Similar tool for source code analysis
 
+## Security
+
+For security details, see [SECURITY.md](SECURITY.md).
+
+- Use caution when processing files from untrusted sources
+- Output files contain content from the original document
+
+## Contributing
+
+Contributions are welcome. For details, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+- Bug reports and feature requests: [Issues](https://github.com/elvezjp/md2map/issues)
+- Pull requests: Branch naming convention `{username}/{date}-{description}`
+
+## Changelog
+
+For details, see [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 MIT License - For details, see [LICENSE](LICENSE).
+
+## Contact
+
+- **Issues**: [GitHub Issues](https://github.com/elvezjp/md2map/issues)
+- **Email**: info@elvez.co.jp
+- **Company**: [Elvez Inc.](https://elvez.co.jp/)
