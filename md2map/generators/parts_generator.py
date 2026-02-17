@@ -44,7 +44,7 @@ def build_filename(section: Section, existing: Set[str]) -> str:
     current: Section | None = section
 
     while current:
-        hierarchy.insert(0, sanitize_filename(current.title))
+        hierarchy.insert(0, sanitize_filename(current.display_name()))
         current = current.parent
 
     base_name = "_".join(hierarchy) + ".md"
@@ -69,13 +69,21 @@ def generate_header(section: Section) -> str:
         HTMLコメント形式のヘッダ
     """
     id_line = f"id: {section.id}\n" if section.id else ""
+    # 仮想セクションの場合のみ追加フィールドを出力（heading モードの後方互換性を維持）
+    virtual_lines = ""
+    if section.is_virtual:
+        virtual_lines += "is_virtual: true\n"
+        if section.split_reason:
+            virtual_lines += f"split_reason: {section.split_reason}\n"
+        if section.virtual_title:
+            virtual_lines += f"virtual_title: {section.virtual_title}\n"
     return f"""<!--
 md2map fragment
 {id_line}original: {section.original_file}
 lines: {section.start_line}-{section.end_line}
-section: {section.title}
+section: {section.display_name()}
 level: {section.level}
--->
+{virtual_lines}-->
 
 """
 

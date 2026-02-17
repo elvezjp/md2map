@@ -1,5 +1,8 @@
 """マークダウンパーサー"""
 
+import json
+import math
+import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -30,6 +33,40 @@ class MarkdownParser(BaseParser):
 
     # フロントマターパターン
     FRONTMATTER_PATTERN = re.compile(r"^---\s*$")
+
+    def __init__(
+        self,
+        split_mode: str = "heading",
+        split_threshold: int = 500,
+        max_subsections: int = 5,
+    ) -> None:
+        if split_mode not in {"heading", "nlp", "ai"}:
+            raise ValueError(f"Invalid split_mode: {split_mode}")
+        self._nlp_tokenizer = None
+        if split_mode == "nlp":
+            try:
+                from sudachipy import dictionary
+            except ImportError as exc:
+                raise RuntimeError(
+                    "NLP mode requires optional dependency. "
+                    "Install with: pip install md2map[nlp]"
+                ) from exc
+            self._nlp_tokenizer = dictionary.Dictionary().create()
+        if split_mode == "ai":
+            try:
+                import openai  # noqa: F401
+            except ImportError as exc:
+                raise RuntimeError(
+                    "AI mode requires optional dependency. "
+                    "Install with: pip install md2map[ai]"
+                ) from exc
+            if not os.getenv("OPENAI_API_KEY"):
+                raise RuntimeError(
+                    "AI mode requires OPENAI_API_KEY environment variable."
+                )
+        self.split_mode = split_mode
+        self.split_threshold = max(1, split_threshold)
+        self.max_subsections = max(1, max_subsections)
 
     def parse(
         self, file_path: str, max_depth: int = 3
@@ -82,6 +119,10 @@ class MarkdownParser(BaseParser):
 
         # セクション構築
         sections = self._build_sections(headings, lines, file_name)
+
+        # 追加分割（heading モード以外）
+        if self.split_mode != "heading":
+            sections = self._refine_sections(sections, lines)
 
         # 各セクションの追加情報を抽出
         for section in sections:
@@ -227,9 +268,9 @@ class MarkdownParser(BaseParser):
             # 親の設定
             if stack:
                 section.parent = stack[-1]
-                section.path = f"{stack[-1].path} > {section.title}"
+                section.path = f"{stack[-1].path} > {section.display_name()}"
             else:
-                section.path = section.title
+                section.path = section.display_name()
 
             stack.append(section)
 
@@ -245,7 +286,8 @@ class MarkdownParser(BaseParser):
         section_text = "".join(section_lines)
 
         # 要約抽出（見出し直後の段落）
-        section.summary = self._extract_summary(section_lines)
+        skip_first = self.HEADING_PATTERN.match(section_lines[0].rstrip()) is not None
+        section.summary = self._extract_summary(section_lines, skip_first_line=skip_first)
 
         # リンク抽出
         section.links = self.LINK_PATTERN.findall(section_text)
@@ -256,7 +298,7 @@ class MarkdownParser(BaseParser):
         # 単語数カウント
         section.word_count = self._count_words(section_text)
 
-    def _extract_summary(self, lines: List[str]) -> Optional[str]:
+    def _extract_summary(self, lines: List[str], skip_first_line: bool = True) -> Optional[str]:
         """最初の段落を要約として抽出する（100文字まで）
 
         Args:
@@ -268,7 +310,8 @@ class MarkdownParser(BaseParser):
         content_started = False
         summary_lines: List[str] = []
 
-        for line in lines[1:]:  # 見出し行をスキップ
+        source_lines = lines[1:] if skip_first_line else lines
+        for line in source_lines:
             stripped = line.strip()
 
             if not stripped:
@@ -324,3 +367,353 @@ class MarkdownParser(BaseParser):
             # 英語: 単語数
             words = clean_text.split()
             return len(words)
+
+    def _refine_sections(self, sections: List[Section], lines: List[str]) -> List[Section]:
+        """セクションを再分割して仮想見出しを挿入する"""
+        if self.max_subsections <= 1:
+            return sections
+
+        if self.split_mode == "nlp":
+            boundary_selector = self._select_boundaries_nlp
+        elif self.split_mode == "ai":
+            boundary_selector = None
+        else:
+            return sections
+
+        refined: List[Section] = []
+        parent_set = {s.parent for s in sections if s.parent is not None}
+
+        for section in sections:
+            # 子セクションを持つ場合は再分割しない
+            if section in parent_set:
+                refined.append(section)
+                continue
+            section_lines = lines[section.start_line - 1 : section.end_line]
+            section_text = "".join(section_lines)
+            total_count = self._count_words(section_text)
+
+            if total_count < self.split_threshold:
+                refined.append(section)
+                continue
+
+            paragraphs = self._split_paragraphs(
+                lines, section.start_line + 1, section.end_line
+            )
+            if len(paragraphs) < 2:
+                refined.append(section)
+                continue
+
+            target_parts = min(
+                self.max_subsections,
+                max(2, math.ceil(total_count / self.split_threshold)),
+            )
+            target_parts = min(target_parts, len(paragraphs))
+
+            if self.split_mode == "ai":
+                chunks, titles = self._select_chunks_ai(
+                    section, lines, paragraphs, target_parts
+                )
+                if not chunks:
+                    chunks = self._chunk_paragraphs_by_threshold(
+                        paragraphs, lines, total_count, target_parts
+                    )
+                    titles = None
+            else:
+                boundaries = boundary_selector(
+                    section, lines, paragraphs, target_parts
+                )
+                if boundaries:
+                    chunks = self._chunks_from_boundaries(paragraphs, boundaries)
+                else:
+                    chunks = self._chunk_paragraphs_by_threshold(
+                        paragraphs, lines, total_count, target_parts
+                    )
+                titles = None
+
+            if len(chunks) < 2:
+                refined.append(section)
+                continue
+
+            # 元のセクションも残し、仮想セクションを直下に追加
+            refined.append(section)
+            if titles:
+                virtual_sections = self._build_virtual_sections_with_titles(
+                    section, chunks, titles
+                )
+            else:
+                virtual_sections = self._build_virtual_sections(section, chunks)
+            refined.extend(virtual_sections)
+
+        self._build_hierarchy(refined)
+        return refined
+
+    def _split_paragraphs(
+        self, lines: List[str], start_line: int, end_line: int
+    ) -> List[Tuple[int, int]]:
+        """段落単位で分割して (start_line, end_line) の配列を返す"""
+        paragraphs: List[Tuple[int, int]] = []
+        i = start_line
+
+        while i <= end_line:
+            if not lines[i - 1].strip():
+                i += 1
+                continue
+            para_start = i
+            while i <= end_line and lines[i - 1].strip():
+                i += 1
+            para_end = i - 1
+            paragraphs.append((para_start, para_end))
+
+        return paragraphs
+
+    def _chunks_from_boundaries(
+        self, paragraphs: List[Tuple[int, int]], boundaries: List[int]
+    ) -> List[List[Tuple[int, int]]]:
+        """境界インデックスから段落チャンクを生成する"""
+        chunks: List[List[Tuple[int, int]]] = []
+        prev = 0
+        for boundary in sorted(boundaries):
+            if boundary < prev or boundary >= len(paragraphs) - 1:
+                continue
+            chunks.append(paragraphs[prev : boundary + 1])
+            prev = boundary + 1
+        if prev < len(paragraphs):
+            chunks.append(paragraphs[prev:])
+        return chunks
+
+    def _chunk_paragraphs_by_threshold(
+        self,
+        paragraphs: List[Tuple[int, int]],
+        lines: List[str],
+        total_count: int,
+        target_parts: int,
+    ) -> List[List[Tuple[int, int]]]:
+        """閾値ベースで段落を均等に分割する"""
+        para_counts = [
+            self._count_words("".join(lines[s - 1 : e]))
+            for s, e in paragraphs
+        ]
+        target_per_part = max(1, math.ceil(total_count / target_parts))
+
+        chunks: List[List[Tuple[int, int]]] = []
+        current_chunk: List[Tuple[int, int]] = []
+        current_count = 0
+
+        for (para_range, para_count) in zip(paragraphs, para_counts):
+            if (
+                current_chunk
+                and current_count + para_count > target_per_part
+                and len(chunks) < target_parts - 1
+            ):
+                chunks.append(current_chunk)
+                current_chunk = []
+                current_count = 0
+            current_chunk.append(para_range)
+            current_count += para_count
+
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        return chunks
+
+    def _select_boundaries_nlp(
+        self,
+        section: Section,
+        lines: List[str],
+        paragraphs: List[Tuple[int, int]],
+        target_parts: int,
+    ) -> List[int]:
+        """NLP（Sudachi）で境界候補を選ぶ"""
+        if self._nlp_tokenizer is None:
+            return []
+
+        para_terms: List[set[str]] = []
+        for start, end in paragraphs:
+            text = "".join(lines[start - 1 : end])
+            nouns = {
+                m.surface()
+                for m in self._nlp_tokenizer.tokenize(text)
+                if m.part_of_speech()[0] == "名詞"
+            }
+            para_terms.append(nouns)
+
+        scores: List[Tuple[int, float]] = []
+        for i in range(len(para_terms) - 1):
+            a = para_terms[i]
+            b = para_terms[i + 1]
+            if not a and not b:
+                similarity = 1.0
+            elif not a or not b:
+                similarity = 0.0
+            else:
+                similarity = len(a & b) / len(a | b)
+            scores.append((i, similarity))
+
+        num_splits = max(0, min(target_parts - 1, len(scores)))
+        if num_splits == 0:
+            return []
+
+        scores.sort(key=lambda item: item[1])
+        boundaries = [idx for idx, _ in scores[:num_splits]]
+        return sorted(set(boundaries))
+
+    def _select_chunks_ai(
+        self,
+        section: Section,
+        lines: List[str],
+        paragraphs: List[Tuple[int, int]],
+        target_parts: int,
+    ) -> Tuple[List[List[Tuple[int, int]]], Optional[List[str]]]:
+        """AI（OpenAI API）で段落チャンクとタイトル候補を取得する"""
+        try:
+            from openai import OpenAI
+        except ImportError:
+            return [], None
+
+        model = os.getenv("MD2MAP_AI_MODEL") or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+        numbered = []
+        for i, (start, end) in enumerate(paragraphs, start=1):
+            text = "".join(lines[start - 1 : end]).strip()
+            numbered.append(f"[{i}] {text}")
+
+        system_text = (
+            "You are a document segmentation assistant. "
+            "Split the numbered paragraphs into coherent sections. "
+            "Return JSON only, no prose."
+        )
+        user_text = (
+            f"Target sections: {target_parts}. "
+            f"Return a JSON array of objects with fields: "
+            f"title, start_paragraph, end_paragraph. "
+            f"Paragraphs:\n" + "\n".join(numbered)
+        )
+
+        logger = get_logger()
+        client = OpenAI()
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_text},
+                    {"role": "user", "content": user_text},
+                ],
+                max_tokens=800,
+            )
+        except Exception as exc:
+            logger.warning(f"AI API call failed: {exc}")
+            return [], None
+
+        # レスポンスからテキストを抽出
+        if not response.choices or not response.choices[0].message.content:
+            logger.warning("AI API returned empty response")
+            return [], None
+        text = response.choices[0].message.content
+        # LLM が ```json ... ``` で囲んで返す場合に対応
+        stripped = text.strip()
+        if stripped.startswith("```"):
+            first_newline = stripped.find("\n")
+            if first_newline != -1:
+                stripped = stripped[first_newline + 1:]
+            if stripped.endswith("```"):
+                stripped = stripped[:-3]
+            text = stripped.strip()
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            return [], None
+
+        items: List[Tuple[int, int, str]] = []
+        for item in data:
+            try:
+                start_idx = int(item["start_paragraph"])
+                end_idx = int(item["end_paragraph"])
+                title = str(item.get("title") or "").strip()
+            except (ValueError, TypeError):
+                continue
+            if start_idx < 1 or end_idx < start_idx:
+                continue
+            if end_idx > len(paragraphs):
+                end_idx = len(paragraphs)
+            items.append((start_idx, end_idx, title))
+
+        if not items:
+            return [], None
+
+        items.sort(key=lambda x: x[0])
+        # Validate coverage and non-overlap
+        if items[0][0] != 1 or items[-1][1] != len(paragraphs):
+            return [], None
+        for i in range(len(items) - 1):
+            if items[i][1] + 1 != items[i + 1][0]:
+                return [], None
+
+        chunks: List[List[Tuple[int, int]]] = []
+        titles: List[str] = []
+        for start_idx, end_idx, title in items:
+            chunk = paragraphs[start_idx - 1 : end_idx]
+            chunks.append(chunk)
+            titles.append(title)
+
+        return chunks, titles
+
+    def _build_virtual_sections_with_titles(
+        self,
+        section: Section,
+        chunks: List[List[Tuple[int, int]]],
+        titles: List[str],
+    ) -> List[Section]:
+        """AI 生成タイトルを使用して仮想セクションを生成する"""
+        virtual_sections: List[Section] = []
+        base_level = min(section.level + 1, 6)
+        total = len(chunks)
+
+        for i, chunk in enumerate(chunks, start=1):
+            start_line = chunk[0][0]
+            end_line = chunk[-1][1]
+
+            raw_title = titles[i - 1] if i - 1 < len(titles) else ""
+            display_title = raw_title or f"{section.display_name()} (part {i}/{total})"
+            virtual = Section(
+                title=section.title,
+                level=base_level,
+                start_line=start_line,
+                end_line=end_line,
+                original_file=section.original_file,
+                is_virtual=True,
+                split_reason=f"{self.split_mode} boundary split",
+                virtual_title=display_title,
+            )
+            virtual_sections.append(virtual)
+
+        return virtual_sections
+
+
+    def _build_virtual_sections(
+        self,
+        section: Section,
+        chunks: List[List[Tuple[int, int]]],
+    ) -> List[Section]:
+        """仮想セクションを生成する"""
+        virtual_sections: List[Section] = []
+        base_level = min(section.level + 1, 6)
+        total = len(chunks)
+
+        for i, chunk in enumerate(chunks, start=1):
+            start_line = chunk[0][0]
+            end_line = chunk[-1][1]
+
+            base_title = section.display_name()
+            virtual_title = f"{base_title} (part {i}/{total})"
+            virtual = Section(
+                title=section.title,
+                level=base_level,
+                start_line=start_line,
+                end_line=end_line,
+                original_file=section.original_file,
+                is_virtual=True,
+                split_reason=f"{self.split_mode} threshold split",
+                virtual_title=virtual_title,
+            )
+            virtual_sections.append(virtual)
+
+        return virtual_sections

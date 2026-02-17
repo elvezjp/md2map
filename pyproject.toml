@@ -28,6 +28,13 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0.0",
 ]
+nlp = [
+    "sudachipy>=0.6",
+    "sudachidict-core>=20230927",
+]
+ai = [
+    "openai>=1.0",
+]
 
 [project.scripts]
 md2map = "md2map.cli:main"

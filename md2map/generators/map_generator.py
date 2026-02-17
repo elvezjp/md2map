@@ -56,7 +56,7 @@ def generate_map(
         if section.id:
             entry["id"] = section.id
         entry.update({
-            "section": section.title,
+            "section": section.display_name(),
             "level": section.level,
             "path": section.path,
             "original_file": section.original_file,
@@ -66,6 +66,13 @@ def generate_map(
             "part_file": section.part_file,
             "checksum": checksum,
         })
+        # 仮想セクションの場合のみ追加フィールドを出力（heading モードの後方互換性を維持）
+        if section.is_virtual:
+            entry["is_virtual"] = True
+            if section.split_reason:
+                entry["split_reason"] = section.split_reason
+            if section.virtual_title:
+                entry["virtual_title"] = section.virtual_title
         entries.append(entry)
 
     # JSON書き込み

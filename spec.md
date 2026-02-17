@@ -110,10 +110,13 @@ md2map は「編集のための再構成」ではなく、**レビュー・解�
 |-----------|------|
 | fragment 宣言 | `md2map fragment` - 分割片である旨の明示 |
 | id | セクションの一意識別子（`{prefix}{連番}` 形式、例: `MD1`, `MD2`） |
-| original | 元ファイルのパス |
+| original | 元ファイル名（パスではなくファイル名のみ） |
 | lines | 開始行-終了行の範囲 |
-| section | セクションの見出しテキスト |
+| section | セクションの表示名（仮想の場合は仮想見出し） |
 | level | 見出しレベル（1〜6） |
+| is_virtual | 仮想見出し由来かどうか（仮想時のみ記載） |
+| split_reason | 分割の根拠（仮想見出しの場合のみ） |
+| virtual_title | 仮想見出し名（仮想見出しの場合のみ） |
 
 ヘッダの後に空行を挟み、元のマークダウン内容を配置する。
 
@@ -131,7 +134,7 @@ md2map は「編集のための再構成」ではなく、**レビュー・解�
 | フィールド | 型 | 説明 |
 |-----------|------|------|
 | id | string | セクションの一意識別子（`{prefix}{連番}` 形式、例: `MD1`, `MD2`） |
-| section | string | セクションの見出しテキスト |
+| section | string | セクションの表示名（仮想の場合は仮想見出し） |
 | level | integer | 見出しレベル（1〜6） |
 | path | string | 階層パス（`親セクション > 子セクション` 形式） |
 | original_file | string | 元ファイル名（パスではなくファイル名のみ） |
@@ -140,6 +143,9 @@ md2map は「編集のための再構成」ではなく、**レビュー・解�
 | word_count | integer | セクション内の単語数（日本語は文字数） |
 | part_file | string | 分割ファイルの相対パス（`parts/` プレフィックス付き） |
 | checksum | string | SHA-256 チェックサム（16進数64文字、小文字） |
+| is_virtual | boolean | 仮想見出し由来かどうか（仮想見出しの場合のみ） |
+| split_reason | string | 分割の根拠（仮想見出しの場合のみ） |
+| virtual_title | string | 仮想見出し名（仮想見出しの場合のみ） |
 
 **id フィールドの用途**:
 - 外部ツール連携時のセクション参照に使用
@@ -170,6 +176,9 @@ md2map build <input_file> [OPTIONS]
 | `--id-prefix <PREFIX>` | 任意 | `MD` | セクションIDのプレフィックス（例: `MD` → `MD1`, `MD2`, ...） |
 | `--verbose` | 任意 | false | 詳細ログ出力の有効化 |
 | `--dry-run` | 任意 | false | ファイル書き込みを行わずプレビューのみ |
+| `--split-mode <MODE>` | 任意 | `heading` | 分割モード（`heading`/`nlp`/`ai`） |
+| `--split-threshold <N>` | 任意 | 500 | 再分割対象の最小文字数（日本語）/単語数（英語） |
+| `--max-subsections <N>` | 任意 | 5 | 1セクションから生成する仮想見出しの最大数 |
 
 #### 2.3.3 終了コード
 
@@ -196,6 +205,12 @@ md2map build <input_file> [OPTIONS]
 | parts/ サブディレクトリ | 同様に上書き動作 |
 
 **注意**: md2map が生成しないファイル（ユーザーが手動配置したファイル等）は削除しない。
+
+#### 2.3.6 AI/NLP モードの前提
+
+- `--split-mode nlp` は `sudachipy` と `sudachidict-core` が必要。
+- `--split-mode ai` は `openai` が必要で、`OPENAI_API_KEY` 環境変数が必須。
+- AI モデル名は `MD2MAP_AI_MODEL` または `OPENAI_MODEL` で指定可能（未指定時は既定モデルを使用）。
 
 ---
 

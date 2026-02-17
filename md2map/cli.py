@@ -54,6 +54,25 @@ def build_arg_parser() -> argparse.ArgumentParser:
     build_parser.add_argument(
         "--dry-run", action="store_true", help="ファイル生成せずプレビューのみ"
     )
+    build_parser.add_argument(
+        "--split-mode",
+        "-m",
+        default="heading",
+        choices=["heading", "nlp", "ai"],
+        help="セクション分割モード（heading/nlp/ai）",
+    )
+    build_parser.add_argument(
+        "--split-threshold",
+        type=int,
+        default=500,
+        help="再分割対象の最小文字数（日本語）/単語数（英語）",
+    )
+    build_parser.add_argument(
+        "--max-subsections",
+        type=int,
+        default=5,
+        help="1セクションから生成する仮想見出しの最大数",
+    )
 
     return parser
 
@@ -85,7 +104,15 @@ def cmd_build(args: argparse.Namespace) -> int:
 
     # パース
     logger.info(f"Parsing: {input_path}")
-    parser = MarkdownParser()
+    try:
+        parser = MarkdownParser(
+            split_mode=args.split_mode,
+            split_threshold=args.split_threshold,
+            max_subsections=args.max_subsections,
+        )
+    except (ValueError, RuntimeError) as exc:
+        logger.error(str(exc))
+        return 1
     sections, warnings = parser.parse(str(input_path), args.max_depth)
     warnings.extend(read_warnings)
 
@@ -100,10 +127,13 @@ def cmd_build(args: argparse.Namespace) -> int:
 
     # dry-run モード
     if args.dry_run:
+        existing_files: set[str] = set()
         print(f"\n=== Detected Sections ({len(sections)}) ===\n")
         for section in sections:
             indent = "  " * (section.level - 1)
-            print(f"{indent}[{section.id}] [H{section.level}] {section.title} ({section.line_range()})")
+            print(
+                f"{indent}[{section.id}] [H{section.level}] {section.display_name()} ({section.line_range()})"
+            )
 
         print(f"\n=== Files to be generated ===\n")
         print(f"  {args.out}/INDEX.md")
@@ -111,7 +141,8 @@ def cmd_build(args: argparse.Namespace) -> int:
         for section in sections:
             # 仮のファイル名を表示
             from md2map.generators.parts_generator import build_filename
-            filename = build_filename(section, set())
+            filename = build_filename(section, existing_files)
+            existing_files.add(filename)
             print(f"  {args.out}/parts/{filename}")
 
         return 2 if warnings else 0
