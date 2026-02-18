@@ -28,8 +28,10 @@ IXVでは、システム開発における日本語の文書について、理�
 ## 特徴
 
 - **見出しベースの分割**: H1、H2、H3（およびそれ以深）の見出しレベルでドキュメントを分割
+- **多段階セクション分割**: NLP（形態素解析）やAI（LLM）による意味的な再分割をサポート
 - **Markdown索引生成**: 構造ツリーとセクション詳細を含むINDEX.mdを自動生成
 - **行番号対応表**: 分割片と元ファイルの対応をMAP.json（機械可読）で提供
+- **マルチLLMプロバイダー**: OpenAI、Anthropic、Amazon Bedrockに対応
 - **日本語対応**: 日本語ドキュメント処理と文字数カウントを完全サポート
 - **コードブロック認識**: コードブロック内の見出しを正しくスキップ
 - **ドライラン機能**: 実際の出力前に生成計画を確認可能
@@ -67,11 +69,37 @@ uv run md2map --help
 ### 基本的な実行
 
 ```bash
-# マークダウンファイルを解析
+# マークダウンファイルを解析（見出しベース分割）
 uv run md2map build document.md --out ./output
 
 # カスタム深度で解析（H1-H2のみ）
 uv run md2map build document.md --out ./output --max-depth 2
+```
+
+### NLPモードで分割
+
+```bash
+# 形態素解析による意味的再分割（sudachipy が必要）
+uv run md2map build document.md --split-mode nlp
+
+# 再分割の閾値を変更（デフォルト: 500文字）
+uv run md2map build document.md --split-mode nlp --split-threshold 300
+```
+
+### AIモードで分割
+
+```bash
+# LLMによる意味的再分割（Amazon Bedrock、デフォルト）
+uv run md2map build document.md --split-mode ai
+
+# OpenAIを使用
+uv run md2map build document.md --split-mode ai --ai-provider openai
+
+# Anthropic APIを使用
+uv run md2map build document.md --split-mode ai --ai-provider anthropic
+
+# モデルを指定
+uv run md2map build document.md --split-mode ai --ai-provider bedrock --ai-model global.anthropic.claude-haiku-4-5-20251001-v1:0
 ```
 
 ### 出力の確認
@@ -101,6 +129,12 @@ uv run md2map build document.md --dry-run
 | `--out <DIR>` | `./md2map-out` | 出力ディレクトリ |
 | `--max-depth <N>` | `3` | 処理する見出しの最大深度（1-6） |
 | `--id-prefix <PREFIX>` | `MD` | セクションIDのプレフィックス（MD1, MD2, ...） |
+| `--split-mode <MODE>` / `-m` | `heading` | 分割モード（`heading`/`nlp`/`ai`） |
+| `--split-threshold <N>` | `500` | 再分割対象の最小文字数（日本語）/単語数（英語） |
+| `--max-subsections <N>` | `5` | 1セクションから生成する仮想見出しの最大数 |
+| `--ai-provider <PROVIDER>` | `bedrock` | AIプロバイダー（`openai`/`anthropic`/`bedrock`） |
+| `--ai-model <MODEL>` | プロバイダー既定 | AIモデルID |
+| `--ai-region <REGION>` | `ap-northeast-1` | Bedrock用リージョン |
 | `--verbose` | false | 詳細ログを出力 |
 | `--dry-run` | false | ファイル生成せずプレビューのみ |
 
@@ -175,6 +209,13 @@ md2map/
 │   │   ├── index_generator.py   # INDEX.md生成
 │   │   ├── map_generator.py     # MAP.json生成
 │   │   └── parts_generator.py   # parts/生成
+│   ├── llm/               # LLMプロバイダー（AIモード用）
+│   │   ├── base_provider.py     # 基底クラス
+│   │   ├── factory.py           # プロバイダーファクトリー
+│   │   ├── config.py            # LLM設定
+│   │   ├── anthropic_provider.py # Anthropic API
+│   │   ├── bedrock_provider.py  # Amazon Bedrock
+│   │   └── openai_provider.py   # OpenAI API
 │   ├── models/            # データモデル
 │   │   └── section.py     # セクション情報クラス
 │   ├── parsers/           # ドキュメントパーサー
@@ -183,6 +224,7 @@ md2map/
 │   └── utils/             # ユーティリティ
 │       ├── file_utils.py  # ファイル操作
 │       └── logger.py      # ログ設定
+├── add-line-numbers/      # 行番号付与ツール（git subtree）
 ├── tests/                 # テストコード
 │   └── fixtures/          # テストフィクスチャ
 ├── docs/                  # ドキュメント
@@ -205,6 +247,7 @@ md2map/
 
 ## 関連プロジェクト
 
+- [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - AIモードで使用する行番号付与ツール
 - [code2map](https://github.com/elvezjp/code2map) - ソースコード解析向けの類似ツール
 
 ## セキュリティ
