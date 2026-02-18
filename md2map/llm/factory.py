@@ -84,7 +84,7 @@ def build_llm_config_from_env(
         resolved_model = (
             model
             or os.getenv("MD2MAP_AI_MODEL")
-            or "anthropic.claude-haiku-4-5-20251001-v1:0"
+            or "global.anthropic.claude-haiku-4-5-20251001-v1:0"
         )
         return LLMConfig(
             provider="bedrock",
