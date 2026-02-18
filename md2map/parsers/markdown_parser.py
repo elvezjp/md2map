@@ -580,15 +580,34 @@ class MarkdownParser(BaseParser):
             numbered.append(f"[{i}] {text}")
 
         system_text = (
-            "You are a document segmentation assistant. "
-            "Split the numbered paragraphs into coherent sections. "
-            "Return JSON only, no prose."
+            "# 役割\n"
+            "あなたは文書構造の分析に特化したアシスタントです。\n"
+            "\n"
+            "# 目的\n"
+            "[N] 形式の連番が振られた段落群を意味的なまとまりごとにグループ化し、"
+            "各グループに内容を端的に表すタイトルを付与してください。\n"
+            "\n"
+            "# 出力形式\n"
+            "JSON 配列のみを返してください。説明文やマークダウン装飾は不要です。\n"
+            "各要素は以下のフィールドを持つオブジェクトです:\n"
+            "- title (string): グループの内容を表す簡潔なタイトル（文書の言語に合わせる）\n"
+            "- start_paragraph (integer): グループの開始段落番号（1始まり）\n"
+            "- end_paragraph (integer): グループの終了段落番号（inclusive）\n"
+            "\n"
+            "スキーマ:\n"
+            "[{\"title\": \"...\", \"start_paragraph\": 1, \"end_paragraph\": 3}, ...]\n"
+            "\n"
+            "# 注意事項\n"
+            "- 各グループは連続する段落で構成すること（飛び飛びの段落を1グループにまとめない）\n"
+            "- 最初のグループは段落 1 から開始すること\n"
+            "- 前のグループの end_paragraph + 1 が次のグループの start_paragraph と一致すること（隙間・重複の禁止）\n"
+            "- 最後のグループは最終段落で終了すること（すべての段落を漏れなくカバー）\n"
+            "- タイトルは元の文書の言語（日本語の文書なら日本語）で付与すること\n"
         )
         user_text = (
-            f"Target sections: {target_parts}. "
-            f"Return a JSON array of objects with fields: "
-            f"title, start_paragraph, end_paragraph. "
-            f"Paragraphs:\n" + "\n".join(numbered)
+            f"以下の段落群を最大 {target_parts} つのセクションに分割してください。\n"
+            f"\n"
+            f"段落一覧:\n" + "\n".join(numbered)
         )
 
         logger = get_logger()
