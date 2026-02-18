@@ -218,10 +218,11 @@ class TestMarkdownParserLLMInjection:
     def test_ai_mode_provider_called_on_parse(self):
         """AI モードで実際にプロバイダーが呼ばれ、行番号ベースで分割されることを確認"""
         # テスト用マークダウン: 10 行（L1=見出し, L2=空行, L3-L10=本文）
-        # own_content 範囲は L2〜L10
+        # own_content 範囲は L2〜L10（9行）
+        # AI には 1-based 相対番号（1〜9）で送信される
         ai_response = json.dumps([
-            {"title": "前半", "start_line": 2, "end_line": 6},
-            {"title": "後半", "start_line": 7, "end_line": 10},
+            {"title": "前半", "start_line": 1, "end_line": 5},
+            {"title": "後半", "start_line": 6, "end_line": 9},
         ])
         provider = MockLLMProvider(response_text=ai_response)
 
@@ -308,9 +309,11 @@ class TestOwnContentRange:
         # L3-L10: 巨大テーブル（own content）
         # L11: ## Child
         # L12: child content
+        # own_content 範囲は L2〜L10（9行）
+        # AI には 1-based 相対番号（1〜9）で送信される
         ai_response = json.dumps([
-            {"title": "テーブル前半", "start_line": 2, "end_line": 6},
-            {"title": "テーブル後半", "start_line": 7, "end_line": 10},
+            {"title": "テーブル前半", "start_line": 1, "end_line": 5},
+            {"title": "テーブル後半", "start_line": 6, "end_line": 9},
         ])
         provider = MockLLMProvider(response_text=ai_response)
 
@@ -398,7 +401,7 @@ class TestOwnContentRange:
 
             assert len(provider.calls) > 0
             user_message = provider.calls[0][1]
-            # 行番号が add-line-numbers 形式で含まれていることを確認
-            assert "   2:" in user_message or "2:" in user_message
+            # 行番号が 1 始まりの add-line-numbers 形式で含まれていることを確認
+            assert "   1:" in user_message or "1:" in user_message
         finally:
             os.unlink(temp_path)

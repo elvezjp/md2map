@@ -7,6 +7,11 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "add-line-numbers"
+version = "0.1.0"
+source = { editable = "add-line-numbers" }
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -626,6 +631,9 @@ wheels = [
 name = "md2map"
 version = "0.1.0"
 source = { editable = "." }
+dependencies = [
+    { name = "add-line-numbers" },
+]
 
 [package.optional-dependencies]
 dev = [
@@ -643,6 +651,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "add-line-numbers", editable = "add-line-numbers" },
     { name = "anthropic", marker = "extra == 'dev'", specifier = ">=0.18" },
     { name = "boto3", marker = "extra == 'dev'", specifier = ">=1.28" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },

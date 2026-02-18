@@ -606,17 +606,16 @@ class MarkdownParser(BaseParser):
         boundaries = [idx for idx, _ in scores[:num_splits]]
         return sorted(set(boundaries))
 
-    def _add_line_numbers(self, content: str, start_line: int) -> str:
-        """テキストに元ファイルの行番号を付与する
+    def _add_line_numbers(self, content: str) -> str:
+        """テキストに 1 始まりの行番号を付与する
 
-        add-line-numbers の形式（右揃え4桁 + コロン + スペース）に準拠し、
-        開始行番号のオフセットを適用する。
+        add-line-numbers パッケージを使用する。行番号は常に 1〜N（相対番号）。
+        AI はこの相対番号で分割点を返し、呼び出し元で元ファイルの行番号に変換する。
         """
-        result_lines = []
-        for i, line in enumerate(content.splitlines()):
-            actual_line_num = start_line + i
-            result_lines.append(f"{actual_line_num:4d}: {line}")
-        return "\n".join(result_lines)
+        from add_line_numbers import add_line_numbers_to_content
+
+        numbered_text, _ = add_line_numbers_to_content(content)
+        return numbered_text
 
     def _select_chunks_ai(
         self,
@@ -626,42 +625,49 @@ class MarkdownParser(BaseParser):
         own_end: int,
         target_parts: int,
     ) -> Tuple[List[Tuple[int, int]], Optional[List[str]]]:
-        """AI（LLMプロバイダー）で行番号ベースのグループ分けとタイトルを取得する"""
+        """AI（LLMプロバイダー）で行番号ベースのグループ分けとタイトルを取得する
+
+        AI には 1〜N の相対行番号付きテキストを送信し、
+        レスポンスの相対行番号を元ファイルの行番号に変換して返す。
+        """
         if self._llm_provider is None:
             return [], None
 
         content = "".join(lines[own_start - 1 : own_end])
-        numbered_text = self._add_line_numbers(content, own_start)
+        numbered_text = self._add_line_numbers(content)
+        total_lines = own_end - own_start + 1
 
         system_text = (
             "# 役割\n"
             "あなたは文書構造の分析に特化したアシスタントです。\n"
             "\n"
             "# 目的\n"
-            "行番号付きテキストを意味的なまとまりごとにグループ化し、"
-            "各グループに内容を端的に表すタイトルを付与してください。\n"
+            "行番号付きテキストを、意味的なまとまりが壊れないよう"
+            "話題や内容の切れ目で区切ってください。\n"
+            "各区間には、その内容を端的に表すタイトルを付与してください。\n"
             "\n"
             "# 出力形式\n"
             "JSON 配列のみを返してください。説明文やマークダウン装飾は不要です。\n"
             "各要素は以下のフィールドを持つオブジェクトです:\n"
-            "- title (string): グループの内容を表す簡潔なタイトル（文書の言語に合わせる）\n"
-            "- start_line (integer): グループの開始行番号\n"
-            "- end_line (integer): グループの終了行番号（inclusive）\n"
+            "- title (string): 区間の内容を表す簡潔なタイトル（文書の言語に合わせる）\n"
+            "- start_line (integer): 区間の開始行番号\n"
+            "- end_line (integer): 区間の終了行番号（inclusive）\n"
             "\n"
             "スキーマ:\n"
-            f"[{{\"title\": \"...\", \"start_line\": {own_start}, \"end_line\": ...}}, ...]\n"
+            f"[{{\"title\": \"...\", \"start_line\": 1, \"end_line\": ...}}, ...]\n"
             "\n"
             "# 注意事項\n"
-            "- 各グループは連続する行で構成すること\n"
-            f"- 最初のグループは行 {own_start} から開始すること\n"
-            "- 前のグループの end_line + 1 が次のグループの start_line と一致すること"
+            "- 意味的に関連する行は同じ区間に含め、話題の変わり目で区切ること\n"
+            "- 最初の区間は行 1 から開始すること\n"
+            "- 前の区間の end_line + 1 が次の区間の start_line と一致すること"
             "（隙間・重複の禁止）\n"
-            f"- 最後のグループは行 {own_end} で終了すること"
+            f"- 最後の区間は行 {total_lines} で終了すること"
             "（すべての行を漏れなくカバー）\n"
             "- タイトルは元の文書の言語（日本語の文書なら日本語）で付与すること\n"
         )
         user_text = (
-            f"以下のテキストを最大 {target_parts} つのセクションに分割してください。\n"
+            f"以下のテキストを、意味的なまとまりを保ちつつ"
+            f"最大 {target_parts} つに区切ってください。\n"
             f"\n"
             f"{numbered_text}"
         )
@@ -687,6 +693,7 @@ class MarkdownParser(BaseParser):
         except json.JSONDecodeError:
             return [], None
 
+        # LLM のレスポンスは 1-based 相対行番号
         items: List[Tuple[int, int, str]] = []
         for item in data:
             try:
@@ -695,7 +702,7 @@ class MarkdownParser(BaseParser):
                 title = str(item.get("title") or "").strip()
             except (ValueError, TypeError, KeyError):
                 continue
-            if sl < own_start or el > own_end or el < sl:
+            if sl < 1 or el > total_lines or el < sl:
                 continue
             items.append((sl, el, title))
 
@@ -703,17 +710,20 @@ class MarkdownParser(BaseParser):
             return [], None
 
         items.sort(key=lambda x: x[0])
-        # Validate coverage and non-overlap
-        if items[0][0] != own_start or items[-1][1] != own_end:
+        # Validate coverage and non-overlap (1-based relative)
+        if items[0][0] != 1 or items[-1][1] != total_lines:
             return [], None
         for i in range(len(items) - 1):
             if items[i][1] + 1 != items[i + 1][0]:
                 return [], None
 
+        # 相対行番号を元ファイルの行番号に変換
         line_ranges: List[Tuple[int, int]] = []
         titles: List[str] = []
         for sl, el, title in items:
-            line_ranges.append((sl, el))
+            actual_start = own_start + sl - 1
+            actual_end = own_start + el - 1
+            line_ranges.append((actual_start, actual_end))
             titles.append(title)
 
         return line_ranges, titles

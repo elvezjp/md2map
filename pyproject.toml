@@ -19,7 +19,12 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    "add-line-numbers",
+]
+
+[tool.uv.sources]
+add-line-numbers = { path = "add-line-numbers", editable = true }
 
 [project.optional-dependencies]
 dev = [
