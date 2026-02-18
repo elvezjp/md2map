@@ -216,14 +216,15 @@ class TestMarkdownParserLLMInjection:
         assert parser._llm_provider is provider
 
     def test_ai_mode_provider_called_on_parse(self):
-        """AI モードで実際にプロバイダーが呼ばれることを確認"""
+        """AI モードで実際にプロバイダーが呼ばれ、行番号ベースで分割されることを確認"""
+        # テスト用マークダウン: 10 行（L1=見出し, L2=空行, L3-L10=本文）
+        # own_content 範囲は L2〜L10
         ai_response = json.dumps([
-            {"title": "Part 1", "start_paragraph": 1, "end_paragraph": 2},
-            {"title": "Part 2", "start_paragraph": 3, "end_paragraph": 4},
+            {"title": "前半", "start_line": 2, "end_line": 6},
+            {"title": "後半", "start_line": 7, "end_line": 10},
         ])
         provider = MockLLMProvider(response_text=ai_response)
 
-        # 大きなセクションを持つテスト用マークダウンを作成（段落を空行で区切る）
         content = "# Title\n\n"
         for i in range(4):
             content += "Paragraph " + str(i + 1) + " content. " * 50 + "\n\n"
@@ -241,9 +242,15 @@ class TestMarkdownParserLLMInjection:
             sections, warnings = parser.parse(temp_path)
             # プロバイダーが呼ばれたことを確認
             assert len(provider.calls) > 0
+            # プロンプトに start_line が含まれていることを確認
+            system_prompt = provider.calls[0][0]
+            assert "start_line" in system_prompt
+            assert "start_paragraph" not in system_prompt
             # 仮想セクションが生成されていることを確認
             virtual_sections = [s for s in sections if s.is_virtual]
-            assert len(virtual_sections) > 0
+            assert len(virtual_sections) == 2
+            assert virtual_sections[0].virtual_title == "前半"
+            assert virtual_sections[1].virtual_title == "後半"
         finally:
             os.unlink(temp_path)
 
@@ -284,3 +291,114 @@ class TestBackwardCompatibility:
         assert len(sections) > 0
         virtual = [s for s in sections if s.is_virtual]
         assert len(virtual) == 0
+
+
+# ---------------------------------------------------------------------------
+# 親セクション自身コンテンツ範囲テスト
+# ---------------------------------------------------------------------------
+
+
+class TestOwnContentRange:
+    """親セクションの自身コンテンツ範囲の算出と再分割テスト"""
+
+    def test_parent_section_with_large_own_content(self):
+        """子セクションを持つ親セクションの自身コンテンツが分割される"""
+        # L1: # Parent
+        # L2: (空行)
+        # L3-L10: 巨大テーブル（own content）
+        # L11: ## Child
+        # L12: child content
+        ai_response = json.dumps([
+            {"title": "テーブル前半", "start_line": 2, "end_line": 6},
+            {"title": "テーブル後半", "start_line": 7, "end_line": 10},
+        ])
+        provider = MockLLMProvider(response_text=ai_response)
+
+        content = "# Parent\n\n"
+        content += "| Col A | Col B |\n"
+        content += "|-------|-------|\n"
+        for i in range(6):
+            content += f"| row{i} | data{i} |\n"
+        content += "\n## Child\n\nChild content.\n"
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write(content)
+            temp_path = f.name
+
+        try:
+            parser = MarkdownParser(
+                split_mode="ai",
+                split_threshold=10,
+                llm_provider=provider,
+            )
+            sections, _ = parser.parse(temp_path)
+
+            # プロバイダーが呼ばれたことを確認
+            assert len(provider.calls) > 0
+
+            # 子セクション（## Child）が保持されていることを確認
+            child_sections = [s for s in sections if s.title == "Child"]
+            assert len(child_sections) == 1
+
+            # 親セクション（# Parent）が保持されていることを確認
+            parent_sections = [s for s in sections if s.title == "Parent" and not s.is_virtual]
+            assert len(parent_sections) == 1
+
+        finally:
+            os.unlink(temp_path)
+
+    def test_ai_mode_fallback_on_invalid_response(self):
+        """AI の無効なレスポンスで行数ベースのフォールバック分割が行われる"""
+        provider = MockLLMProvider(response_text="invalid json")
+
+        content = "# Title\n\n"
+        for i in range(4):
+            content += "Line " + str(i + 1) + " content. " * 50 + "\n\n"
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write(content)
+            temp_path = f.name
+
+        try:
+            parser = MarkdownParser(
+                split_mode="ai",
+                split_threshold=50,
+                llm_provider=provider,
+            )
+            sections, _ = parser.parse(temp_path)
+
+            # フォールバックで仮想セクションが生成されること
+            virtual_sections = [s for s in sections if s.is_virtual]
+            assert len(virtual_sections) >= 2
+
+            # フォールバック時は threshold split
+            for vs in virtual_sections:
+                assert vs.split_reason == "ai threshold split"
+        finally:
+            os.unlink(temp_path)
+
+    def test_ai_mode_line_numbers_in_prompt(self):
+        """プロンプトに正しい行番号が含まれることを確認"""
+        provider = MockLLMProvider(response_text="[]")
+
+        content = "# Title\n\n"
+        content += "Big content. " * 100 + "\n"
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write(content)
+            temp_path = f.name
+
+        try:
+            parser = MarkdownParser(
+                split_mode="ai",
+                split_threshold=50,
+                llm_provider=provider,
+            )
+            parser.parse(temp_path)
+
+            assert len(provider.calls) > 0
+            user_message = provider.calls[0][1]
+            # 行番号が add-line-numbers 形式で含まれていることを確認
+            assert "   2:" in user_message or "2:" in user_message
+        finally:
+            os.unlink(temp_path)

@@ -374,58 +374,102 @@ class MarkdownParser(BaseParser):
             words = clean_text.split()
             return len(words)
 
+    def _get_own_content_range(
+        self, section: Section, sections: List[Section]
+    ) -> Tuple[int, int]:
+        """セクションの自身コンテンツ範囲を返す
+
+        子セクションを持つ場合は、見出し行の次〜最初の子セクションの開始行の前行まで。
+        末端セクションの場合は、見出し行の次〜セクション終了行まで。
+
+        Returns:
+            (own_start, own_end): 自身コンテンツの行範囲（1-based, inclusive）
+        """
+        own_start = section.start_line + 1
+        own_end = section.end_line
+
+        for s in sections:
+            if s.parent is section:
+                own_end = s.start_line - 1
+                break
+
+        return own_start, own_end
+
     def _refine_sections(self, sections: List[Section], lines: List[str]) -> List[Section]:
         """セクションを再分割して仮想見出しを挿入する"""
         if self.max_subsections <= 1:
             return sections
 
-        if self.split_mode == "nlp":
-            boundary_selector = self._select_boundaries_nlp
-        elif self.split_mode == "ai":
-            boundary_selector = None
-        else:
+        if self.split_mode not in ("nlp", "ai"):
             return sections
 
         refined: List[Section] = []
-        parent_ids = {id(s.parent) for s in sections if s.parent is not None}
 
         for section in sections:
-            # 子セクションを持つ場合は再分割しない
-            if id(section) in parent_ids:
+            # 自身のコンテンツ範囲を算出
+            own_start, own_end = self._get_own_content_range(section, sections)
+
+            if own_start > own_end:
                 refined.append(section)
                 continue
-            section_lines = lines[section.start_line - 1 : section.end_line]
-            section_text = "".join(section_lines)
-            total_count = self._count_words(section_text)
+
+            own_text = "".join(lines[own_start - 1 : own_end])
+            total_count = self._count_words(own_text)
 
             if total_count < self.split_threshold:
                 refined.append(section)
                 continue
 
-            paragraphs = self._split_paragraphs(
-                lines, section.start_line + 1, section.end_line
-            )
-            if len(paragraphs) < 2:
-                refined.append(section)
-                continue
-
-            target_parts = min(
-                self.max_subsections,
-                max(2, math.ceil(total_count / self.split_threshold)),
-            )
-            target_parts = min(target_parts, len(paragraphs))
-
             if self.split_mode == "ai":
-                chunks, titles = self._select_chunks_ai(
-                    section, lines, paragraphs, target_parts
+                # AI モード: 行番号ベース
+                content_lines_count = own_end - own_start + 1
+                if content_lines_count < 2:
+                    refined.append(section)
+                    continue
+
+                target_parts = min(
+                    self.max_subsections,
+                    max(2, math.ceil(total_count / self.split_threshold)),
                 )
-                if not chunks:
-                    chunks = self._chunk_paragraphs_by_threshold(
-                        paragraphs, lines, total_count, target_parts
+
+                line_ranges, titles = self._select_chunks_ai(
+                    section, lines, own_start, own_end, target_parts
+                )
+                if not line_ranges:
+                    line_ranges = self._chunk_lines_by_threshold(
+                        lines, own_start, own_end, total_count, target_parts
                     )
                     titles = None
+
+                if len(line_ranges) < 2:
+                    refined.append(section)
+                    continue
+
+                refined.append(section)
+                if titles:
+                    virtual_sections = self._build_virtual_sections_with_titles(
+                        section, line_ranges, titles
+                    )
+                else:
+                    virtual_sections = self._build_virtual_sections(
+                        section, line_ranges
+                    )
+                refined.extend(virtual_sections)
+
             else:
-                boundaries = boundary_selector(
+                # NLP モード: 段落ベース
+                paragraphs = self._split_paragraphs(lines, own_start, own_end)
+                if len(paragraphs) < 2:
+                    refined.append(section)
+                    continue
+
+                target_parts = min(
+                    self.max_subsections,
+                    max(2, math.ceil(total_count / self.split_threshold)),
+                )
+                target_parts = min(target_parts, len(paragraphs))
+
+                boundaries = self._select_boundaries_nlp(
                     section, lines, paragraphs, target_parts
                 )
                 if boundaries:
@@ -434,21 +478,20 @@ class MarkdownParser(BaseParser):
                     chunks = self._chunk_paragraphs_by_threshold(
                         paragraphs, lines, total_count, target_parts
                     )
-                titles = None
 
-            if len(chunks) < 2:
+                if len(chunks) < 2:
+                    refined.append(section)
+                    continue
+
                 refined.append(section)
-                continue
-
-            # 元のセクションも残し、仮想セクションを直下に追加
-            refined.append(section)
-            if titles:
-                virtual_sections = self._build_virtual_sections_with_titles(
-                    section, chunks, titles
+                # 段落チャンクを行範囲タプルに変換
+                line_ranges = [
+                    (chunk[0][0], chunk[-1][1]) for chunk in chunks
+                ]
+                virtual_sections = self._build_virtual_sections(
+                    section, line_ranges
                 )
-            else:
-                virtual_sections = self._build_virtual_sections(section, chunks)
-            refined.extend(virtual_sections)
+                refined.extend(virtual_sections)
 
         self._build_hierarchy(refined)
         return refined
@@ -563,51 +606,64 @@ class MarkdownParser(BaseParser):
         boundaries = [idx for idx, _ in scores[:num_splits]]
         return sorted(set(boundaries))
 
+    def _add_line_numbers(self, content: str, start_line: int) -> str:
+        """テキストに元ファイルの行番号を付与する
+
+        add-line-numbers の形式（右揃え4桁 + コロン + スペース）に準拠し、
+        開始行番号のオフセットを適用する。
+        """
+        result_lines = []
+        for i, line in enumerate(content.splitlines()):
+            actual_line_num = start_line + i
+            result_lines.append(f"{actual_line_num:4d}: {line}")
+        return "\n".join(result_lines)
+
     def _select_chunks_ai(
         self,
         section: Section,
         lines: List[str],
-        paragraphs: List[Tuple[int, int]],
+        own_start: int,
+        own_end: int,
         target_parts: int,
-    ) -> Tuple[List[List[Tuple[int, int]]], Optional[List[str]]]:
-        """AI（LLMプロバイダー）で段落チャンクとタイトル候補を取得する"""
+    ) -> Tuple[List[Tuple[int, int]], Optional[List[str]]]:
+        """AI（LLMプロバイダー）で行番号ベースのグループ分けとタイトルを取得する"""
         if self._llm_provider is None:
             return [], None
 
-        numbered = []
-        for i, (start, end) in enumerate(paragraphs, start=1):
-            text = "".join(lines[start - 1 : end]).strip()
-            numbered.append(f"[{i}] {text}")
+        content = "".join(lines[own_start - 1 : own_end])
+        numbered_text = self._add_line_numbers(content, own_start)
 
         system_text = (
             "# 役割\n"
             "あなたは文書構造の分析に特化したアシスタントです。\n"
             "\n"
             "# 目的\n"
-            "[N] 形式の連番が振られた段落群を意味的なまとまりごとにグループ化し、"
+            "行番号付きテキストを意味的なまとまりごとにグループ化し、"
             "各グループに内容を端的に表すタイトルを付与してください。\n"
             "\n"
             "# 出力形式\n"
             "JSON 配列のみを返してください。説明文やマークダウン装飾は不要です。\n"
             "各要素は以下のフィールドを持つオブジェクトです:\n"
             "- title (string): グループの内容を表す簡潔なタイトル（文書の言語に合わせる）\n"
-            "- start_paragraph (integer): グループの開始段落番号（1始まり）\n"
-            "- end_paragraph (integer): グループの終了段落番号（inclusive）\n"
+            "- start_line (integer): グループの開始行番号\n"
+            "- end_line (integer): グループの終了行番号（inclusive）\n"
             "\n"
             "スキーマ:\n"
-            "[{\"title\": \"...\", \"start_paragraph\": 1, \"end_paragraph\": 3}, ...]\n"
+            f"[{{\"title\": \"...\", \"start_line\": {own_start}, \"end_line\": ...}}, ...]\n"
             "\n"
             "# 注意事項\n"
-            "- 各グループは連続する段落で構成すること（飛び飛びの段落を1グループにまとめない）\n"
-            "- 最初のグループは段落 1 から開始すること\n"
-            "- 前のグループの end_paragraph + 1 が次のグループの start_paragraph と一致すること（隙間・重複の禁止）\n"
-            "- 最後のグループは最終段落で終了すること（すべての段落を漏れなくカバー）\n"
+            "- 各グループは連続する行で構成すること\n"
+            f"- 最初のグループは行 {own_start} から開始すること\n"
+            "- 前のグループの end_line + 1 が次のグループの start_line と一致すること"
+            "（隙間・重複の禁止）\n"
+            f"- 最後のグループは行 {own_end} で終了すること"
+            "（すべての行を漏れなくカバー）\n"
             "- タイトルは元の文書の言語（日本語の文書なら日本語）で付与すること\n"
         )
         user_text = (
-            f"以下の段落群を最大 {target_parts} つのセクションに分割してください。\n"
+            f"以下のテキストを最大 {target_parts} つのセクションに分割してください。\n"
             f"\n"
-            f"段落一覧:\n" + "\n".join(numbered)
+            f"{numbered_text}"
         )
 
         logger = get_logger()
@@ -634,52 +690,74 @@ class MarkdownParser(BaseParser):
         items: List[Tuple[int, int, str]] = []
         for item in data:
             try:
-                start_idx = int(item["start_paragraph"])
-                end_idx = int(item["end_paragraph"])
+                sl = int(item["start_line"])
+                el = int(item["end_line"])
                 title = str(item.get("title") or "").strip()
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, KeyError):
                 continue
-            if start_idx < 1 or end_idx < start_idx:
+            if sl < own_start or el > own_end or el < sl:
                 continue
-            if end_idx > len(paragraphs):
-                end_idx = len(paragraphs)
-            items.append((start_idx, end_idx, title))
+            items.append((sl, el, title))
 
         if not items:
             return [], None
 
         items.sort(key=lambda x: x[0])
         # Validate coverage and non-overlap
-        if items[0][0] != 1 or items[-1][1] != len(paragraphs):
+        if items[0][0] != own_start or items[-1][1] != own_end:
             return [], None
         for i in range(len(items) - 1):
             if items[i][1] + 1 != items[i + 1][0]:
                 return [], None
 
-        chunks: List[List[Tuple[int, int]]] = []
+        line_ranges: List[Tuple[int, int]] = []
         titles: List[str] = []
-        for start_idx, end_idx, title in items:
-            chunk = paragraphs[start_idx - 1 : end_idx]
-            chunks.append(chunk)
+        for sl, el, title in items:
+            line_ranges.append((sl, el))
             titles.append(title)
 
-        return chunks, titles
+        return line_ranges, titles
+
+    def _chunk_lines_by_threshold(
+        self,
+        lines: List[str],
+        own_start: int,
+        own_end: int,
+        total_count: int,
+        target_parts: int,
+    ) -> List[Tuple[int, int]]:
+        """行数ベースで均等に分割する（AI モードのフォールバック）"""
+        total_lines = own_end - own_start + 1
+        lines_per_part = max(1, math.ceil(total_lines / target_parts))
+
+        line_ranges: List[Tuple[int, int]] = []
+        current_start = own_start
+
+        while current_start <= own_end:
+            current_end = min(current_start + lines_per_part - 1, own_end)
+            # 最後のパート以外で残りが少ない場合はまとめる
+            if (
+                len(line_ranges) == target_parts - 1
+                or own_end - current_end < lines_per_part // 2
+            ):
+                current_end = own_end
+            line_ranges.append((current_start, current_end))
+            current_start = current_end + 1
+
+        return line_ranges
 
     def _build_virtual_sections_with_titles(
         self,
         section: Section,
-        chunks: List[List[Tuple[int, int]]],
+        line_ranges: List[Tuple[int, int]],
         titles: List[str],
     ) -> List[Section]:
         """AI 生成タイトルを使用して仮想セクションを生成する"""
         virtual_sections: List[Section] = []
         base_level = min(section.level + 1, 6)
-        total = len(chunks)
+        total = len(line_ranges)
 
-        for i, chunk in enumerate(chunks, start=1):
-            start_line = chunk[0][0]
-            end_line = chunk[-1][1]
-
+        for i, (start_line, end_line) in enumerate(line_ranges, start=1):
             raw_title = titles[i - 1] if i - 1 < len(titles) else ""
             display_title = raw_title or f"{section.display_name()} (part {i}/{total})"
             virtual = Section(
@@ -696,21 +774,17 @@ class MarkdownParser(BaseParser):
 
         return virtual_sections
 
-
     def _build_virtual_sections(
         self,
         section: Section,
-        chunks: List[List[Tuple[int, int]]],
+        line_ranges: List[Tuple[int, int]],
     ) -> List[Section]:
         """仮想セクションを生成する"""
         virtual_sections: List[Section] = []
         base_level = min(section.level + 1, 6)
-        total = len(chunks)
+        total = len(line_ranges)
 
-        for i, chunk in enumerate(chunks, start=1):
-            start_line = chunk[0][0]
-            end_line = chunk[-1][1]
-
+        for i, (start_line, end_line) in enumerate(line_ranges, start=1):
             base_title = section.display_name()
             virtual_title = f"{base_title} (part {i}/{total})"
             virtual = Section(
