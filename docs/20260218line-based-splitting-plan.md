@@ -36,16 +36,22 @@
 
 ### 2.2 行番号付与
 
-外部ツール [add-line-numbers](https://github.com/elvezjp/add-line-numbers) の方式に合わせ、セクション本文の各行に `[LN]` 形式の行番号を付与する。
+git subtree として追加済みの [add-line-numbers](https://github.com/elvezjp/add-line-numbers) の `add_line_numbers_to_content()` 関数を使用する。自前で行番号付与ロジックを実装しない。
+
+**インポートパス**: `add-line-numbers/add_line_numbers.py` の `add_line_numbers_to_content(content: str) -> tuple[str, int]`
+
+**行番号フォーマット**: `{行番号:4d}: {行内容}`（右揃え4桁 + コロン + スペース）
 
 ```
-[42] | 項目 | 説明 |
-[43] |------|------|
-[44] | A    | ...  |
-[45] | B    | ...  |
+  42: | 項目 | 説明 |
+  43: |------|------|
+  44: | A    | ...  |
+  45: | B    | ...  |
 ```
 
-- 行番号は元ファイルの行番号（1-based）を使用する
+**使用方法**:
+- セクションの自身コンテンツ範囲のテキストを抽出し、`add_line_numbers_to_content()` に渡す
+- ただし行番号は元ファイルの行番号（1-based）を使用するため、関数の出力をそのまま使うのではなく、開始行番号に合わせたオフセット付与が必要
 - 見出し行は含めない（セクション本文のみ）
 - 空行にも行番号を付与する
 
