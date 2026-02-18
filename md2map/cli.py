@@ -73,6 +73,22 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=5,
         help="1セクションから生成する仮想見出しの最大数",
     )
+    build_parser.add_argument(
+        "--ai-provider",
+        default="bedrock",
+        choices=["openai", "anthropic", "bedrock"],
+        help="AIプロバイダー（デフォルト: bedrock）",
+    )
+    build_parser.add_argument(
+        "--ai-model",
+        default=None,
+        help="AIモデルID（未指定時はプロバイダーのデフォルト）",
+    )
+    build_parser.add_argument(
+        "--ai-region",
+        default=None,
+        help="Bedrock用リージョン（未指定時は環境変数またはap-northeast-1）",
+    )
 
     return parser
 
@@ -104,11 +120,24 @@ def cmd_build(args: argparse.Namespace) -> int:
 
     # パース
     logger.info(f"Parsing: {input_path}")
+    llm_config = None
+    if args.split_mode == "ai":
+        from md2map.llm.factory import build_llm_config_from_env
+        try:
+            llm_config = build_llm_config_from_env(
+                provider=args.ai_provider,
+                model=args.ai_model,
+                region=args.ai_region,
+            )
+        except (ValueError, RuntimeError) as exc:
+            logger.error(str(exc))
+            return 1
     try:
         parser = MarkdownParser(
             split_mode=args.split_mode,
             split_threshold=args.split_threshold,
             max_subsections=args.max_subsections,
+            llm_config=llm_config,
         )
     except (ValueError, RuntimeError) as exc:
         logger.error(str(exc))

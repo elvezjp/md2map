@@ -2,15 +2,18 @@
 
 import json
 import math
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from md2map.models.section import Section
 from md2map.parsers.base_parser import BaseParser
 from md2map.utils.file_utils import read_file
 from md2map.utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from md2map.llm.base_provider import BaseLLMProvider
+    from md2map.llm.config import LLMConfig
 
 
 class MarkdownParser(BaseParser):
@@ -39,10 +42,13 @@ class MarkdownParser(BaseParser):
         split_mode: str = "heading",
         split_threshold: int = 500,
         max_subsections: int = 5,
+        llm_config: Optional["LLMConfig"] = None,
+        llm_provider: Optional["BaseLLMProvider"] = None,
     ) -> None:
         if split_mode not in {"heading", "nlp", "ai"}:
             raise ValueError(f"Invalid split_mode: {split_mode}")
         self._nlp_tokenizer = None
+        self._llm_provider: Optional["BaseLLMProvider"] = None
         if split_mode == "nlp":
             try:
                 from sudachipy import dictionary
@@ -53,17 +59,17 @@ class MarkdownParser(BaseParser):
                 ) from exc
             self._nlp_tokenizer = dictionary.Dictionary().create()
         if split_mode == "ai":
-            try:
-                import openai  # noqa: F401
-            except ImportError as exc:
-                raise RuntimeError(
-                    "AI mode requires optional dependency. "
-                    "Install with: pip install md2map[ai]"
-                ) from exc
-            if not os.getenv("OPENAI_API_KEY"):
-                raise RuntimeError(
-                    "AI mode requires OPENAI_API_KEY environment variable."
-                )
+            if llm_provider is not None:
+                self._llm_provider = llm_provider
+            elif llm_config is not None:
+                from md2map.llm.factory import get_llm_provider
+                self._llm_provider = get_llm_provider(llm_config)
+            else:
+                # 後方互換: 環境変数からフォールバック
+                from md2map.llm.factory import build_llm_config_from_env
+                fallback_config = build_llm_config_from_env(provider="bedrock")
+                from md2map.llm.factory import get_llm_provider
+                self._llm_provider = get_llm_provider(fallback_config)
         self.split_mode = split_mode
         self.split_threshold = max(1, split_threshold)
         self.max_subsections = max(1, max_subsections)
@@ -381,11 +387,11 @@ class MarkdownParser(BaseParser):
             return sections
 
         refined: List[Section] = []
-        parent_set = {s.parent for s in sections if s.parent is not None}
+        parent_ids = {id(s.parent) for s in sections if s.parent is not None}
 
         for section in sections:
             # 子セクションを持つ場合は再分割しない
-            if section in parent_set:
+            if id(section) in parent_ids:
                 refined.append(section)
                 continue
             section_lines = lines[section.start_line - 1 : section.end_line]
@@ -564,13 +570,10 @@ class MarkdownParser(BaseParser):
         paragraphs: List[Tuple[int, int]],
         target_parts: int,
     ) -> Tuple[List[List[Tuple[int, int]]], Optional[List[str]]]:
-        """AI（OpenAI API）で段落チャンクとタイトル候補を取得する"""
-        try:
-            from openai import OpenAI
-        except ImportError:
+        """AI（LLMプロバイダー）で段落チャンクとタイトル候補を取得する"""
+        if self._llm_provider is None:
             return [], None
 
-        model = os.getenv("MD2MAP_AI_MODEL") or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
         numbered = []
         for i, (start, end) in enumerate(paragraphs, start=1):
             text = "".join(lines[start - 1 : end]).strip()
@@ -589,36 +592,23 @@ class MarkdownParser(BaseParser):
         )
 
         logger = get_logger()
-        client = OpenAI()
         try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_text},
-                    {"role": "user", "content": user_text},
-                ],
-                max_tokens=800,
-            )
+            response_text = self._llm_provider.send_message(system_text, user_text)
         except Exception as exc:
             logger.warning(f"AI API call failed: {exc}")
             return [], None
 
-        # レスポンスからテキストを抽出
-        if not response.choices or not response.choices[0].message.content:
-            logger.warning("AI API returned empty response")
-            return [], None
-        text = response.choices[0].message.content
         # LLM が ```json ... ``` で囲んで返す場合に対応
-        stripped = text.strip()
+        stripped = response_text.strip()
         if stripped.startswith("```"):
             first_newline = stripped.find("\n")
             if first_newline != -1:
                 stripped = stripped[first_newline + 1:]
             if stripped.endswith("```"):
                 stripped = stripped[:-3]
-            text = stripped.strip()
+            response_text = stripped.strip()
         try:
-            data = json.loads(text)
+            data = json.loads(response_text)
         except json.JSONDecodeError:
             return [], None
 
