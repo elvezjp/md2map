@@ -56,7 +56,7 @@ def generate_map(
         if section.id:
             entry["id"] = section.id
         entry.update({
-            "section": section.display_name(),
+            "section": section.title,
             "level": section.level,
             "path": section.path,
             "original_file": section.original_file,

@@ -81,7 +81,7 @@ def generate_header(section: Section) -> str:
 md2map fragment
 {id_line}original: {section.original_file}
 lines: {section.start_line}-{section.end_line}
-section: {section.display_name()}
+section: {section.title}
 level: {section.level}
 {subsplit_lines}-->
 

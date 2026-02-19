@@ -446,6 +446,8 @@ class MarkdownParser(BaseParser):
                     continue
 
                 refined.append(section)
+                # 最初のサブスプリットに見出し行を含める
+                line_ranges[0] = (section.start_line, line_ranges[0][1])
                 if titles:
                     virtual_sections = self._build_virtual_sections_with_titles(
                         section, line_ranges, titles
@@ -488,6 +490,8 @@ class MarkdownParser(BaseParser):
                 line_ranges = [
                     (chunk[0][0], chunk[-1][1]) for chunk in chunks
                 ]
+                # 最初のサブスプリットに見出し行を含める
+                line_ranges[0] = (section.start_line, line_ranges[0][1])
                 virtual_sections = self._build_virtual_sections(
                     section, line_ranges
                 )
