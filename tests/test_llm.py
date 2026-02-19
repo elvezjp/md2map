@@ -248,10 +248,10 @@ class TestMarkdownParserLLMInjection:
             assert "start_line" in system_prompt
             assert "start_paragraph" not in system_prompt
             # 仮想セクションが生成されていることを確認
-            virtual_sections = [s for s in sections if s.is_virtual]
+            virtual_sections = [s for s in sections if s.is_subsplit]
             assert len(virtual_sections) == 2
-            assert virtual_sections[0].virtual_title == "前半"
-            assert virtual_sections[1].virtual_title == "後半"
+            assert virtual_sections[0].subsplit_title == "Title: 前半"
+            assert virtual_sections[1].subsplit_title == "Title: 後半"
         finally:
             os.unlink(temp_path)
 
@@ -290,7 +290,7 @@ class TestBackwardCompatibility:
         parser = MarkdownParser(split_mode="heading")
         sections, warnings = parser.parse(str(FIXTURES_DIR / "simple.md"))
         assert len(sections) > 0
-        virtual = [s for s in sections if s.is_virtual]
+        virtual = [s for s in sections if s.is_subsplit]
         assert len(virtual) == 0
 
 
@@ -344,7 +344,7 @@ class TestOwnContentRange:
             assert len(child_sections) == 1
 
             # 親セクション（# Parent）が保持されていることを確認
-            parent_sections = [s for s in sections if s.title == "Parent" and not s.is_virtual]
+            parent_sections = [s for s in sections if s.title == "Parent" and not s.is_subsplit]
             assert len(parent_sections) == 1
 
         finally:
@@ -371,12 +371,12 @@ class TestOwnContentRange:
             sections, _ = parser.parse(temp_path)
 
             # フォールバックで仮想セクションが生成されること
-            virtual_sections = [s for s in sections if s.is_virtual]
+            virtual_sections = [s for s in sections if s.is_subsplit]
             assert len(virtual_sections) >= 2
 
             # フォールバック時は threshold split
             for vs in virtual_sections:
-                assert vs.split_reason == "ai threshold split"
+                assert "ai threshold split" in vs.note
         finally:
             os.unlink(temp_path)
 

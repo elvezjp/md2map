@@ -396,7 +396,7 @@ class MarkdownParser(BaseParser):
         return own_start, own_end
 
     def _refine_sections(self, sections: List[Section], lines: List[str]) -> List[Section]:
-        """セクションを再分割して仮想見出しを挿入する"""
+        """セクションを再分割してサブスプリットを挿入する"""
         if self.max_subsections <= 1:
             return sections
 
@@ -762,23 +762,26 @@ class MarkdownParser(BaseParser):
         line_ranges: List[Tuple[int, int]],
         titles: List[str],
     ) -> List[Section]:
-        """AI 生成タイトルを使用して仮想セクションを生成する"""
+        """AI 生成タイトルを使用してサブスプリットセクションを生成する"""
         virtual_sections: List[Section] = []
         base_level = min(section.level + 1, 6)
         total = len(line_ranges)
 
         for i, (start_line, end_line) in enumerate(line_ranges, start=1):
             raw_title = titles[i - 1] if i - 1 < len(titles) else ""
-            display_title = raw_title or f"{section.display_name()} (part {i}/{total})"
+            if raw_title:
+                display_title = f"{section.display_name()}: {raw_title}"
+            else:
+                display_title = f"{section.display_name()}: part-{i}"
             virtual = Section(
                 title=section.title,
                 level=base_level,
                 start_line=start_line,
                 end_line=end_line,
                 original_file=section.original_file,
-                is_virtual=True,
-                split_reason=f"{self.split_mode} boundary split",
-                virtual_title=display_title,
+                is_subsplit=True,
+                note=f"Subsplit of {section.id or section.title} (L{start_line}\u2013L{end_line}, {self.split_mode} boundary split)",
+                subsplit_title=display_title,
             )
             virtual_sections.append(virtual)
 
@@ -789,23 +792,23 @@ class MarkdownParser(BaseParser):
         section: Section,
         line_ranges: List[Tuple[int, int]],
     ) -> List[Section]:
-        """仮想セクションを生成する"""
+        """サブスプリットセクションを生成する"""
         virtual_sections: List[Section] = []
         base_level = min(section.level + 1, 6)
         total = len(line_ranges)
 
         for i, (start_line, end_line) in enumerate(line_ranges, start=1):
             base_title = section.display_name()
-            virtual_title = f"{base_title} (part {i}/{total})"
+            subsplit_title = f"{base_title}: part-{i}"
             virtual = Section(
                 title=section.title,
                 level=base_level,
                 start_line=start_line,
                 end_line=end_line,
                 original_file=section.original_file,
-                is_virtual=True,
-                split_reason=f"{self.split_mode} threshold split",
-                virtual_title=virtual_title,
+                is_subsplit=True,
+                note=f"Subsplit of {section.id or section.title} (L{start_line}\u2013L{end_line}, {self.split_mode} threshold split)",
+                subsplit_title=subsplit_title,
             )
             virtual_sections.append(virtual)
 

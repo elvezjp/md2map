@@ -69,21 +69,21 @@ def generate_header(section: Section) -> str:
         HTMLコメント形式のヘッダ
     """
     id_line = f"id: {section.id}\n" if section.id else ""
-    # 仮想セクションの場合のみ追加フィールドを出力（heading モードの後方互換性を維持）
-    virtual_lines = ""
-    if section.is_virtual:
-        virtual_lines += "is_virtual: true\n"
-        if section.split_reason:
-            virtual_lines += f"split_reason: {section.split_reason}\n"
-        if section.virtual_title:
-            virtual_lines += f"virtual_title: {section.virtual_title}\n"
+    # サブスプリットの場合のみ追加フィールドを出力（heading モードの後方互換性を維持）
+    subsplit_lines = ""
+    if section.is_subsplit:
+        subsplit_lines += "is_subsplit: true\n"
+        if section.note:
+            subsplit_lines += f"note: {section.note}\n"
+        if section.subsplit_title:
+            subsplit_lines += f"subsplit_title: {section.subsplit_title}\n"
     return f"""<!--
 md2map fragment
 {id_line}original: {section.original_file}
 lines: {section.start_line}-{section.end_line}
 section: {section.display_name()}
 level: {section.level}
-{virtual_lines}-->
+{subsplit_lines}-->
 
 """
 

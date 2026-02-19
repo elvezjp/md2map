@@ -66,13 +66,13 @@ def generate_map(
             "part_file": section.part_file,
             "checksum": checksum,
         })
-        # 仮想セクションの場合のみ追加フィールドを出力（heading モードの後方互換性を維持）
-        if section.is_virtual:
-            entry["is_virtual"] = True
-            if section.split_reason:
-                entry["split_reason"] = section.split_reason
-            if section.virtual_title:
-                entry["virtual_title"] = section.virtual_title
+        # サブスプリットの場合のみ追加フィールドを出力（heading モードの後方互換性を維持）
+        if section.is_subsplit:
+            entry["is_subsplit"] = True
+            if section.note:
+                entry["note"] = section.note
+            if section.subsplit_title:
+                entry["subsplit_title"] = section.subsplit_title
         entries.append(entry)
 
     # JSON書き込み
