@@ -228,6 +228,9 @@ md2map/
 ├── tests/                 # テストコード
 │   └── fixtures/          # テストフィクスチャ
 ├── docs/                  # ドキュメント
+├── versions/              # 旧バージョンスナップショット
+│   ├── v0.1.0/            # v0.1.0 スナップショット
+│   └── README.md          # versionsディレクトリの説明
 ├── CHANGELOG.md           # 変更履歴
 ├── CONTRIBUTING.md        # コントリビューションガイド
 ├── README.md              # 英語版README

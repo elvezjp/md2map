@@ -228,6 +228,9 @@ md2map/
 ├── tests/                 # Test code
 │   └── fixtures/          # Test fixtures
 ├── docs/                  # Documentation
+├── versions/              # Old version snapshots
+│   ├── v0.1.0/            # v0.1.0 snapshot
+│   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history
 ├── CONTRIBUTING.md        # Contribution guidelines
 ├── README.md              # This file (English)
