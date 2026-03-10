@@ -261,7 +261,7 @@ class TestGenerateIndex:
             output_path = Path(tmpdir) / "INDEX.md"
             generate_index(sections, [], str(output_path), "test.md")
 
-            content = output_path.read_text()
+            content = output_path.read_text(encoding="utf-8")
 
             # ヘッダ
             assert "# Index: test.md" in content
@@ -286,7 +286,7 @@ class TestGenerateIndex:
             output_path = Path(tmpdir) / "INDEX.md"
             generate_index(sections, warnings, str(output_path), "test.md")
 
-            content = output_path.read_text()
+            content = output_path.read_text(encoding="utf-8")
 
             assert "## Warnings" in content
             assert "[WARNING] Test warning 1" in content
@@ -322,7 +322,7 @@ class TestGenerateIndex:
             output_path = Path(tmpdir) / "INDEX.md"
             generate_index(sections, [], str(output_path), "test.md")
 
-            content = output_path.read_text()
+            content = output_path.read_text(encoding="utf-8")
 
             # 構造ツリーにIDが含まれる
             assert "[MD1] Main (L1–L10)" in content
@@ -362,7 +362,7 @@ class TestGenerateMap:
             generate_map(sections, tmpdir, str(output_path))
 
             # JSON をパース
-            data = json.loads(output_path.read_text())
+            data = json.loads(output_path.read_text(encoding="utf-8"))
 
             assert len(data) == 1
             entry = data[0]
@@ -405,7 +405,7 @@ class TestGenerateMap:
             generate_map(sections, tmpdir, str(output_path))
 
             # JSON をパース
-            data = json.loads(output_path.read_text())
+            data = json.loads(output_path.read_text(encoding="utf-8"))
 
             assert len(data) == 1
             entry = data[0]
@@ -441,7 +441,7 @@ class TestGenerateMap:
             generate_map(sections, tmpdir, str(output_path))
 
             # JSON をパース
-            data = json.loads(output_path.read_text())
+            data = json.loads(output_path.read_text(encoding="utf-8"))
 
             assert len(data) == 1
             entry = data[0]
@@ -458,23 +458,25 @@ class TestCalculateChecksum:
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".md") as f:
             f.write("Test content")
             f.flush()
+            tmp_path = f.name
 
-            checksum = calculate_checksum(f.name)
+        checksum = calculate_checksum(tmp_path)
 
-            assert len(checksum) == 64
-            assert all(c in "0123456789abcdef" for c in checksum)
+        assert len(checksum) == 64
+        assert all(c in "0123456789abcdef" for c in checksum)
 
-            os.unlink(f.name)
+        os.unlink(tmp_path)
 
     def test_checksum_deterministic(self):
         """同じ内容で同じチェックサム"""
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".md") as f:
             f.write("Same content")
             f.flush()
+            tmp_path = f.name
 
-            checksum1 = calculate_checksum(f.name)
-            checksum2 = calculate_checksum(f.name)
+        checksum1 = calculate_checksum(tmp_path)
+        checksum2 = calculate_checksum(tmp_path)
 
-            assert checksum1 == checksum2
+        assert checksum1 == checksum2
 
-            os.unlink(f.name)
+        os.unlink(tmp_path)

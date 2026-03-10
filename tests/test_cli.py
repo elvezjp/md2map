@@ -53,7 +53,7 @@ class TestCLIBuild:
 
             # H3 以下は含まれない
             map_path = Path(tmpdir) / "MAP.json"
-            data = json.loads(map_path.read_text())
+            data = json.loads(map_path.read_text(encoding="utf-8"))
             levels = [entry["level"] for entry in data]
             assert 3 not in levels
 
@@ -148,14 +148,14 @@ class TestCLIBuild:
 
             # MAP.json にカスタムプレフィックスのIDが含まれる
             map_path = Path(tmpdir) / "MAP.json"
-            data = json.loads(map_path.read_text())
+            data = json.loads(map_path.read_text(encoding="utf-8"))
             ids = [entry.get("id") for entry in data]
             assert "DOC1" in ids
             assert "DOC2" in ids
 
             # INDEX.md にもカスタムプレフィックスのIDが含まれる
             index_path = Path(tmpdir) / "INDEX.md"
-            content = index_path.read_text()
+            content = index_path.read_text(encoding="utf-8")
             assert "[DOC1]" in content
             assert "[DOC2]" in content
 
@@ -172,7 +172,7 @@ class TestCLIOutput:
             )
 
             index_path = Path(tmpdir) / "INDEX.md"
-            content = index_path.read_text()
+            content = index_path.read_text(encoding="utf-8")
 
             # 必須セクション
             assert "# Index:" in content
@@ -192,7 +192,7 @@ class TestCLIOutput:
             )
 
             map_path = Path(tmpdir) / "MAP.json"
-            data = json.loads(map_path.read_text())
+            data = json.loads(map_path.read_text(encoding="utf-8"))
 
             assert isinstance(data, list)
             assert len(data) > 0
@@ -227,7 +227,7 @@ class TestCLIOutput:
             assert len(part_files) > 0
 
             # 最初のパートファイルを確認
-            content = part_files[0].read_text()
+            content = part_files[0].read_text(encoding="utf-8")
 
             # ヘッダ
             assert "<!--" in content
@@ -255,13 +255,13 @@ class TestCLIJapanese:
 
             # INDEX.md に日本語が含まれる
             index_path = Path(tmpdir) / "INDEX.md"
-            content = index_path.read_text()
+            content = index_path.read_text(encoding="utf-8")
             assert "日本語ドキュメント" in content
             assert "概要" in content
 
             # MAP.json に日本語が含まれる
             map_path = Path(tmpdir) / "MAP.json"
-            data = json.loads(map_path.read_text())
+            data = json.loads(map_path.read_text(encoding="utf-8"))
             sections = [entry["section"] for entry in data]
             assert "日本語ドキュメント" in sections
 
