@@ -38,9 +38,9 @@ IXVでは、システム開発における日本語の文書について、理�
 
 ## ドキュメント
 
-- [CHANGELOG.md](CHANGELOG.md) - バージョン履歴
+- [CHANGELOG_ja.md](CHANGELOG_ja.md) - バージョン履歴
 - [CONTRIBUTING.md](CONTRIBUTING.md) - コントリビューション方法
-- [SECURITY.md](SECURITY.md) - セキュリティポリシー
+- [SECURITY_ja.md](SECURITY_ja.md) - セキュリティポリシー
 - [spec.md](spec.md) - 技術仕様書
 
 ## セットアップ
@@ -233,11 +233,13 @@ md2map/
 │   ├── v0.1.0/            # v0.1.0 スナップショット
 │   ├── v0.2.0/            # v0.2.0 スナップショット
 │   └── README.md          # versionsディレクトリの説明
-├── CHANGELOG.md           # 変更履歴
+├── CHANGELOG.md           # 変更履歴（英語）
+├── CHANGELOG_ja.md        # 変更履歴（日本語）
 ├── CONTRIBUTING.md        # コントリビューションガイド
 ├── README.md              # 英語版README
 ├── README_ja.md           # 本ファイル（日本語版）
-├── SECURITY.md            # セキュリティポリシー
+├── SECURITY.md            # セキュリティポリシー（英語）
+├── SECURITY_ja.md         # セキュリティポリシー（日本語）
 ├── spec.md                # 技術仕様書
 └── pyproject.toml         # プロジェクト設定
 ```
@@ -263,7 +265,7 @@ md2map/
 
 ## セキュリティ
 
-セキュリティに関する詳細は [SECURITY.md](SECURITY.md) を参照してください。
+セキュリティに関する詳細は [SECURITY_ja.md](SECURITY_ja.md) を参照してください。
 
 - 信頼できないソースからのファイル処理には注意してください
 - 出力ファイルには元のドキュメント内容が含まれます
@@ -277,7 +279,7 @@ md2map/
 
 ## 変更履歴
 
-詳細は [CHANGELOG.md](CHANGELOG.md) を参照してください。
+詳細は [CHANGELOG_ja.md](CHANGELOG_ja.md) を参照してください。
 
 ## ライセンス
 

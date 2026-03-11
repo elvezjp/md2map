@@ -233,11 +233,13 @@ md2map/
 │   ├── v0.1.0/            # v0.1.0 snapshot
 │   ├── v0.2.0/            # v0.2.0 snapshot
 │   └── README.md          # versions directory description
-├── CHANGELOG.md           # Version history
+├── CHANGELOG.md           # Version history (English)
+├── CHANGELOG_ja.md        # Version history (Japanese)
 ├── CONTRIBUTING.md        # Contribution guidelines
 ├── README.md              # This file (English)
 ├── README_ja.md           # Japanese README
-├── SECURITY.md            # Security policy
+├── SECURITY.md            # Security policy (English)
+├── SECURITY_ja.md         # Security policy (Japanese)
 ├── spec.md                # Technical specification
 └── pyproject.toml         # Project configuration
 ```
