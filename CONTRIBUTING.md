@@ -1,42 +1,44 @@
 # Contributing to md2map
 
-md2mapへの貢献に興味を持っていただきありがとうございます。このドキュメントでは、プロジェクトへの貢献方法について説明します。
+[English](./CONTRIBUTING.md) | [日本語](./CONTRIBUTING_ja.md)
 
-## 貢献の方法
+Thank you for your interest in contributing to md2map. This document explains how to contribute to the project.
 
-プロジェクトへの貢献は以下の方法で行えます：
+## Ways to Contribute
 
-- **バグの報告**: 問題を発見した場合はIssueを作成してください
-- **機能改善の提案**: 新機能のアイデアがあればIssueで提案してください
-- **プルリクエスト**: コードの修正や機能追加をPRで送信してください
+You can contribute to the project in the following ways:
 
-## バグ報告
+- **Bug Reports**: Create an Issue if you find a problem
+- **Feature Proposals**: Propose new feature ideas via Issues
+- **Pull Requests**: Submit code fixes or new features via PRs
 
-バグを報告する際は、以下の情報を含めてIssueを作成してください：
+## Bug Reports
 
-- **明確で説明的なタイトル**: 問題を簡潔に説明するタイトル
-- **再現手順**: 問題を再現するための具体的な手順
-- **期待される動作**: 本来どのように動作すべきか
-- **実際の動作**: 実際に起きた動作やエラーメッセージ
-- **サンプルファイル**（可能であれば）: 問題を再現できる入力Markdownファイル
-- **環境情報**:
-  - md2mapのバージョン（`uv run md2map --version`）
-  - Pythonのバージョン（`python --version`）
-  - OS（macOS, Linux, Windowsなど）
+When reporting a bug, please create an Issue with the following information:
 
-### バグ報告の例
+- **Clear and descriptive title**: A title that briefly describes the problem
+- **Steps to reproduce**: Specific steps to reproduce the issue
+- **Expected behavior**: How it should work
+- **Actual behavior**: What actually happened, including error messages
+- **Sample file** (if possible): An input Markdown file that reproduces the issue
+- **Environment information**:
+  - md2map version (`uv run md2map --version`)
+  - Python version (`python --version`)
+  - OS (macOS, Linux, Windows, etc.)
+
+### Bug Report Example
 
 ```markdown
-## タイトル
-コードブロック内の見出しが誤って分割される
+## Title
+Headings inside code blocks are incorrectly split
 
-## 再現手順
-1. md2mapをインストール
-2. 以下の内容を含むMarkdownファイルを作成:
+## Steps to Reproduce
+1. Install md2map
+2. Create a Markdown file with the following content:
    ```markdown
    # Introduction
 
-   以下はサンプルコードです：
+   Here is some sample code:
 
    ```python
    # This is a comment, not a heading
@@ -44,87 +46,87 @@ md2mapへの貢献に興味を持っていただきありがとうございま�
        pass
    ```
    ```
-3. `uv run md2map build test.md --out ./out` を実行
+3. Run `uv run md2map build test.md --out ./out`
 
-## 期待される動作
-コードブロック内の`# This is a comment`は見出しとして認識されない
+## Expected Behavior
+`# This is a comment` inside the code block is not recognized as a heading
 
-## 実際の動作
-コードブロック内のコメントが見出しとして分割される
+## Actual Behavior
+The comment inside the code block is split as a heading
 
-## 環境
+## Environment
 - md2map: 0.1.0
 - Python: 3.11.0
 - OS: macOS 14.0
 ```
 
-## 機能改善の提案
+## Feature Proposals
 
-新機能や改善を提案する際は、以下の情報を含めてIssueを作成してください：
+When proposing new features or improvements, please create an Issue with:
 
-- **明確で説明的なタイトル**: 提案を簡潔に説明するタイトル
-- **機能の詳細な説明**: 何を実現したいのか具体的に説明
-- **ユースケースとメリット**: なぜこの機能が必要か、どのような場面で役立つか
-- **関連する例やモックアップ**（可能であれば）: 期待する出力形式や動作のサンプル
+- **Clear and descriptive title**: A title that briefly describes the proposal
+- **Detailed description**: Concrete explanation of what you want to achieve
+- **Use cases and benefits**: Why this feature is needed and in what scenarios it helps
+- **Related examples or mockups** (if possible): Expected output format or behavior samples
 
-## プルリクエストの手順
+## Pull Request Process
 
-### 1. リポジトリのフォークとブランチ作成
+### 1. Fork and Create a Branch
 
 ```bash
-# リポジトリをフォーク（GitHub上で実行）
+# Fork the repository (on GitHub)
 
-# フォークしたリポジトリをクローン
+# Clone your fork
 git clone https://github.com/YOUR_USERNAME/md2map.git
 cd md2map
 
-# アップストリームを追加
+# Add upstream remote
 git remote add upstream https://github.com/elvezjp/md2map.git
 
-# 作業ブランチを作成
+# Create a working branch
 git checkout -b YOUR_USERNAME/YYYYMMDD-feature-name
 ```
 
-**ブランチ命名規則**: `{ユーザー名}/{日付YYYYMMDD}-{内容}`
+**Branch naming convention**: `{username}/{YYYYMMDD}-{description}`
 
-例:
+Examples:
 - `tominaga/20260203-add-frontmatter-support`
 - `yamada/20260210-fix-codeblock-detection`
 
-### 2. コーディングスタイルへの準拠
+### 2. Follow the Coding Style
 
-- [PEP 8](https://peps.python.org/pep-0008/) スタイルガイドラインに従ってください
-- Ruffを使用してコードをフォーマットしてください
+- Follow the [PEP 8](https://peps.python.org/pep-0008/) style guidelines
+- Use Ruff to format your code
 
 ```bash
-# コードのフォーマットとリント
+# Format and lint code
 uv run ruff format .
 uv run ruff check . --fix
 ```
 
-### 3. テストの作成と実行
+### 3. Write and Run Tests
 
-新機能やバグ修正には、対応するテストを追加してください。
+Please add corresponding tests for new features and bug fixes.
 
 ```bash
-# すべてのテストを実行
+# Run all tests
 uv run pytest
 
-# 特定のテストファイルを実行
+# Run a specific test file
 uv run pytest tests/test_markdown_parser.py
 
-# カバレッジレポートを生成
+# Generate a coverage report
 uv run pytest --cov=md2map --cov-report=html
 ```
 
-### 4. ドキュメントの更新
+### 4. Update Documentation
 
-- 新機能を追加した場合は、README.mdを更新してください
-- APIの変更がある場合は、関連するドキュメントを更新してください
+- Update README.md when adding new features
+- Update related documentation when there are API changes
 
-### 5. コミットメッセージの書き方
+### 5. Commit Message Format
 
-コミットメッセージは以下の形式で記載してください：
+Please write commit messages in the following format:
 
 ```
 <type>: <subject>
@@ -135,148 +137,148 @@ uv run pytest --cov=md2map --cov-report=html
 ```
 
 **type**:
-- `feat`: 新機能
-- `fix`: バグ修正
-- `docs`: ドキュメントのみの変更
-- `style`: コードの意味に影響しない変更（フォーマットなど）
-- `refactor`: バグ修正でも新機能でもないコード変更
-- `test`: テストの追加・修正
-- `chore`: ビルドプロセスやツールの変更
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation-only changes
+- `style`: Changes that do not affect code meaning (formatting, etc.)
+- `refactor`: Code changes that are neither bug fixes nor new features
+- `test`: Adding or modifying tests
+- `chore`: Changes to build process or tools
 
-**良い例**:
+**Good examples**:
 ```
-feat: フロントマターの解析に対応
+feat: Add frontmatter parsing support
 
-YAMLフロントマターを含むMarkdownファイルの解析機能を実装しました。
-- フロントマターのスキップに対応
-- メタデータの抽出に対応
+Implemented parsing for Markdown files containing YAML frontmatter.
+- Added frontmatter skipping support
+- Added metadata extraction support
 
 Closes #123
 ```
 
-**悪い例**:
+**Bad examples**:
 ```
 fix bug
 ```
 ```
-修正
+fixed
 ```
 
-### 6. プッシュとPR送信
+### 6. Push and Submit PR
 
 ```bash
-# 変更をプッシュ
+# Push your changes
 git push origin YOUR_USERNAME/YYYYMMDD-feature-name
 ```
 
-GitHub上でPull Requestを作成し、以下を含めてください：
+Create a Pull Request on GitHub and include:
 
-- 変更内容の説明
-- 関連するIssue番号（あれば）
-- テスト方法
+- Description of changes
+- Related Issue number (if any)
+- How to test
 
-### 7. レビュー対応
+### 7. Review Process
 
-- レビューコメントには丁寧に対応してください
-- 修正が必要な場合は、追加コミットで対応してください
+- Respond to review comments courteously
+- Address requested changes with additional commits
 
-### PR送信前のチェックリスト
+### Pre-submission Checklist
 
-- [ ] コードがPEP 8スタイルに準拠している
-- [ ] `uv run ruff check .` がエラーなしで完了する
-- [ ] `uv run pytest` がすべてパスする
-- [ ] 新機能には対応するテストを追加した
-- [ ] 必要に応じてドキュメントを更新した
-- [ ] コミットメッセージが規則に従っている
+- [ ] Code follows PEP 8 style
+- [ ] `uv run ruff check .` completes without errors
+- [ ] `uv run pytest` passes all tests
+- [ ] Tests added for new features
+- [ ] Documentation updated as needed
+- [ ] Commit messages follow the convention
 
-## 開発環境のセットアップ
+## Development Environment Setup
 
-### 前提条件
+### Prerequisites
 
-- Python 3.9以上
-- [uv](https://docs.astral.sh/uv/)（推奨パッケージマネージャー）
+- Python 3.9 or higher
+- [uv](https://docs.astral.sh/uv/) (recommended package manager)
 - Git
 
-### インストール手順
+### Installation
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone https://github.com/elvezjp/md2map.git
 cd md2map
 
-# 開発用依存関係を含めてインストール
+# Install with development dependencies
 uv sync --all-extras
 
-# 動作確認
+# Verify installation
 uv run md2map --help
 uv run pytest
 ```
 
-## テストの実行
+## Running Tests
 
 ```bash
-# すべてのテストを実行
+# Run all tests
 uv run pytest
 
-# 詳細な出力で実行
+# Run with verbose output
 uv run pytest -v
 
-# 特定のテストファイルを実行
+# Run a specific test file
 uv run pytest tests/test_markdown_parser.py
 
-# 特定のテスト関数を実行
+# Run a specific test function
 uv run pytest tests/test_markdown_parser.py::test_parse_headings
 
-# カバレッジ付きで実行
+# Run with coverage
 uv run pytest --cov=md2map
 
-# HTMLカバレッジレポートを生成
+# Generate HTML coverage report
 uv run pytest --cov=md2map --cov-report=html
 open htmlcov/index.html
 ```
 
-## コーディングガイドライン
+## Coding Guidelines
 
-### スタイルガイド
+### Style Guide
 
-- [PEP 8](https://peps.python.org/pep-0008/) に準拠してください
-- Ruffをフォーマッタおよびリンターとして使用します
+- Follow [PEP 8](https://peps.python.org/pep-0008/)
+- Ruff is used as the formatter and linter
 
-### 命名規則
+### Naming Conventions
 
-- **関数・変数**: snake_case（例: `parse_markdown`, `output_dir`）
-- **クラス**: PascalCase（例: `MarkdownParser`, `Section`）
-- **定数**: UPPER_SNAKE_CASE（例: `DEFAULT_OUTPUT_DIR`）
-- **プライベート**: 先頭にアンダースコア（例: `_internal_method`）
+- **Functions and variables**: snake_case (e.g., `parse_markdown`, `output_dir`)
+- **Classes**: PascalCase (e.g., `MarkdownParser`, `Section`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `DEFAULT_OUTPUT_DIR`)
+- **Private**: Leading underscore (e.g., `_internal_method`)
 
-### ドキュメント
+### Documentation
 
-- 公開関数・クラスにはdocstringを記載してください
-- Google形式のdocstringを推奨します
+- Add docstrings to public functions and classes
+- Google-style docstrings are recommended
 
 ```python
 def parse_markdown(file_path: str, max_depth: int = 3) -> list[Section]:
-    """Markdownファイルを解析してセクション情報を抽出する。
+    """Parse a Markdown file and extract section information.
 
     Args:
-        file_path: 解析対象のMarkdownファイルパス
-        max_depth: 処理する見出しの最大深度（1-6）
+        file_path: Path to the Markdown file to parse
+        max_depth: Maximum heading depth to process (1-6)
 
     Returns:
-        セクション情報のリスト
+        List of section information
 
     Raises:
-        FileNotFoundError: ファイルが存在しない場合
-        ParseError: 解析に失敗した場合
+        FileNotFoundError: If the file does not exist
+        ParseError: If parsing fails
     """
 ```
 
-## お問い合わせ
+## Contact
 
-- 質問や相談がある場合は、GitHubのIssueを作成してください
-- `question` ラベルを付けていただけると助かります
-- 一般的な議論はGitHub Discussionsもご利用いただけます
+- For questions or discussions, please create a GitHub Issue
+- Adding the `question` label is appreciated
+- General discussions are also welcome on GitHub Discussions
 
 ---
 
-ご貢献をお待ちしております！
+We look forward to your contributions!

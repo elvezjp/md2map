@@ -39,7 +39,7 @@ IXVでは、システム開発における日本語の文書について、理�
 ## ドキュメント
 
 - [CHANGELOG_ja.md](CHANGELOG_ja.md) - バージョン履歴
-- [CONTRIBUTING.md](CONTRIBUTING.md) - コントリビューション方法
+- [CONTRIBUTING_ja.md](CONTRIBUTING_ja.md) - コントリビューション方法
 - [SECURITY_ja.md](SECURITY_ja.md) - セキュリティポリシー
 - [spec.md](spec.md) - 技術仕様書
 
@@ -235,7 +235,8 @@ md2map/
 │   └── README.md          # versionsディレクトリの説明
 ├── CHANGELOG.md           # 変更履歴（英語）
 ├── CHANGELOG_ja.md        # 変更履歴（日本語）
-├── CONTRIBUTING.md        # コントリビューションガイド
+├── CONTRIBUTING.md        # コントリビューションガイド（英語）
+├── CONTRIBUTING_ja.md     # コントリビューションガイド（日本語）
 ├── README.md              # 英語版README
 ├── README_ja.md           # 本ファイル（日本語版）
 ├── SECURITY.md            # セキュリティポリシー（英語）
@@ -272,7 +273,7 @@ md2map/
 
 ## コントリビューション
 
-コントリビューションを歓迎します。詳細は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+コントリビューションを歓迎します。詳細は [CONTRIBUTING_ja.md](CONTRIBUTING_ja.md) を参照してください。
 
 - バグ報告・機能提案: [Issues](https://github.com/elvezjp/md2map/issues)
 - プルリクエスト: ブランチ命名規則 `{ユーザー名}/{日付}-{内容}`

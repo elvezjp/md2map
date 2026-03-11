@@ -235,7 +235,8 @@ md2map/
 │   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history (English)
 ├── CHANGELOG_ja.md        # Version history (Japanese)
-├── CONTRIBUTING.md        # Contribution guidelines
+├── CONTRIBUTING.md        # Contribution guidelines (English)
+├── CONTRIBUTING_ja.md     # Contribution guidelines (Japanese)
 ├── README.md              # This file (English)
 ├── README_ja.md           # Japanese README
 ├── SECURITY.md            # Security policy (English)
