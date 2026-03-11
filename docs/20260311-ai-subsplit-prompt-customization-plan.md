@@ -2,6 +2,7 @@
 
 作成日: 2026-03-11
 関連Issue: #4（AIサブスプリットの分割位置が不適切になる場合がある）
+ステータス: **対応完了**（v0.3.0 としてリリース済み）
 
 ## 1. 背景と目的
 
@@ -383,21 +384,21 @@ Mermaid ブロックやコードブロックの保護はデフォルトには含
 
 ### 8.1 機能テスト
 
-- [ ] `ai_prompt_extra_notes` 未指定時、デフォルトプロンプトで正常に分割される（ユニットテスト `test_default_prompt_unchanged`）
-- [ ] `ai_prompt_extra_notes` 指定時、`notes` パート末尾に追記される（ユニットテスト `test_prompt_extra_appended`）
-- [ ] ユーザープロンプトに `total_lines` が含まれる（ユニットテスト `test_total_lines_in_user_prompt`）
-- [ ] AI レスポンスに `title` が含まれなくてもバリデーションが通る（ユニットテスト）
-- [ ] `--ai-prompt-extra-notes` CLI オプションが LLM 呼び出しに反映される（結合テスト `test_cli_ai_prompt_extra_notes`）
-- [ ] AI モードで `_build_virtual_sections()`（`part-N` 形式）が使われる（結合テスト `test_ai_mode_with_prompt_extra`）
+- [x] `ai_prompt_extra_notes` 未指定時、デフォルトプロンプトで正常に分割される（ユニットテスト `test_default_prompt_unchanged`）
+- [x] `ai_prompt_extra_notes` 指定時、`notes` パート末尾に追記される（ユニットテスト `test_prompt_extra_appended`）
+- [x] ユーザープロンプトに `total_lines` が含まれる（ユニットテスト `test_total_lines_in_user_prompt`）
+- [x] AI レスポンスに `title` が含まれなくてもバリデーションが通る（ユニットテスト `test_prompt_no_title_field`）
+- [x] `--ai-prompt-extra-notes` CLI オプションが LLM 呼び出しに反映される（ユニットテスト `test_prompt_extra_passed_to_llm`）
+- [x] AI モードで `_build_virtual_sections()`（`part-N` 形式）が使われる（ユニットテスト `test_ai_mode_provider_called_on_parse`）
 
 ### 8.2 後方互換性
 
-- [ ] `ai_prompt_extra_notes` 未指定時、既存の呼び出しコードが変更なしで動作する（既存テストが全て PASS）
-- [ ] `split_mode=heading` / `split_mode=nlp` に影響がない（既存テストが全て PASS）
+- [x] `ai_prompt_extra_notes` 未指定時、既存の呼び出しコードが変更なしで動作する（既存テストが全て PASS: 83/83）
+- [x] `split_mode=heading` / `split_mode=nlp` に影響がない（既存テストが全て PASS: 83/83）
 
 ### 8.3 成果物
 
-- [ ] `versions/v0.2.0/` に旧バージョンが保持されている
-- [ ] `pyproject.toml` のバージョンが v0.3.0 になっている
-- [ ] `spec.md` が最新の設計を反映している
-- [ ] `docs/examples/v0.3/` にサンプル実行結果が出力されている
+- [x] `versions/v0.2.0/` に旧バージョンが保持されている
+- [x] `pyproject.toml` のバージョンが v0.3.0 になっている
+- [x] `spec.md` が最新の設計を反映している
+- [x] `docs/examples/v0.3/` にサンプル実行結果が出力されている（heading / nlp / ai 各モード）
