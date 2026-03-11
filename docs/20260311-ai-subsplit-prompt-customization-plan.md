@@ -224,7 +224,7 @@ parser = MarkdownParser(
 
 | ファイル | 変更内容 |
 |---------|----------|
-| `md2map/parsers/markdown_parser.py` | `DEFAULT_AI_PROMPT_PARTS` 定義、`__init__` に `ai_prompt_extra_notes` 引数追加、`_build_ai_system_prompt()` メソッド追加、`_select_chunks_ai()` のシステムプロンプト組み立てを置換、ユーザープロンプトに `total_lines` 制約を移動 |
+| `md2map/parsers/markdown_parser.py` | `DEFAULT_AI_PROMPT_PARTS` 定義、`__init__` に `ai_prompt_extra_notes` 引数追加、`_build_ai_system_prompt()` メソッド追加、`_select_chunks_ai()` のシステムプロンプト組み立てを置換・タイトル生成廃止、ユーザープロンプトに `total_lines` 制約を移動、`_build_virtual_sections_with_titles()` 削除 |
 | `md2map/cli.py` | `--ai-prompt-extra-notes` オプション追加、`cmd_build()` で `ai_prompt_extra_notes` を渡し |
 | `tests/test_llm.py` | プロンプトカスタマイズ関連のテスト追加 |
 
@@ -250,27 +250,154 @@ parser = MarkdownParser(
 
 ---
 
-## 6. 対応案 A（プロンプト改善）への展望
+## 6. 対応案 A（プロンプト改善）
 
-本計画（対応案 B）の実装完了後、対応案 A として以下をデフォルトの `notes` に追加することを検討する。
+本計画（対応案 B）の実装と合わせて、以下のプロンプト改善を行う。
 
+### 6.1 タイトル生成の廃止
+
+AI にサブスプリットのタイトル生成を求めるのをやめ、分割位置の決定に集中させる。
+
+**理由:**
+- タイトル生成は分割精度に寄与しない
+- `title` フィールド分のトークンが減り、応答速度・コスト改善
+- バリデーションが簡素化される（`title` の空文字チェック等が不要に）
+- AI モードも NLP モードと同様に `part-N` 形式に統一され、コードが整理される
+
+**変更内容:**
+
+| 対象 | 変更 |
+|------|------|
+| `purpose` パート | 「各区間には、その内容を端的に表すタイトルを付与してください。」を削除 |
+| `format` パート | `title` フィールドを削除。スキーマを `[{"start_line": 1, "end_line": ...}]` に変更 |
+| `notes` パート | 「タイトルは元の文書の言語で付与すること」を削除 |
+| `_select_chunks_ai()` | `title` の抽出・返却を削除。常に `titles=None` を返す |
+| `_build_virtual_sections_with_titles()` | 削除 |
+| AI モードの分割フロー | 常に `_build_virtual_sections()`（`part-N` 形式）を使用 |
+
+**変更後の `DEFAULT_AI_PROMPT_PARTS`:**
+
+```python
+DEFAULT_AI_PROMPT_PARTS: Dict[str, str] = {
+    "role": (
+        "あなたは文書構造の分析に特化したアシスタントです。"
+    ),
+    "purpose": (
+        "行番号付きテキストを、文書の構造や意味的なまとまりを保ちつつ"
+        "話題や内容の切れ目で区切ってください。"
+    ),
+    "format": (
+        "JSON 配列のみを返してください。説明文やマークダウン装飾は不要です。\n"
+        "各要素は以下のフィールドを持つオブジェクトです:\n"
+        "- start_line (integer): 区間の開始行番号\n"
+        "- end_line (integer): 区間の終了行番号（inclusive）\n"
+        "\n"
+        "スキーマ:\n"
+        "[{\"start_line\": 1, \"end_line\": ...}, ...]"
+    ),
+    "notes": (
+        "- 最初の区間は行 1 から開始すること\n"
+        "- 前の区間の end_line + 1 が次の区間の start_line と一致すること"
+        "（隙間・重複の禁止）\n"
+        "- ネストされた項目は親項目と同じ区間に含めること"
+        "（インデントが深い行を親から切り離さない）\n"
+        "- 構造を保ちつつ、各区間のサイズが極端に偏らないよう"
+        "バランスよく分割すること"
+    ),
+}
 ```
-- Mermaid ブロック（```mermaid ... ```）やコードブロック（``` ... ```）の途中では分割しないこと
-- ネストされたリスト項目の途中で分割しないこと
-- 論理的な区切り（項番、処理単位、定義単位等）を優先して分割すること
+
+### 6.2 `notes` パートのデフォルト改善
+
+デフォルトの `notes` に以下を追加する（Issue #4 の本題）。
+
+**ネスト構造の保護:**
+```
+- ネストされた項目は親項目と同じ区間に含めること（インデントが深い行を親から切り離さない）
 ```
 
-これはデフォルトの `DEFAULT_AI_PROMPT_PARTS["notes"]` への追記として実装し、本計画とは別の変更として管理する。対応案 A の具体的な文面やデフォルトに含める範囲については、本計画の実装後に改めて検討する。
+**分割バランス:**
+```
+- 構造を保ちつつ、各区間のサイズが極端に偏らないようバランスよく分割すること
+```
+
+Mermaid ブロックやコードブロックの保護はデフォルトには含めない。必要な場合は `ai_prompt_extra_notes` で呼び出し元から追記する。
+
+例えば、以下のようなネスト構造がある場合：
+```
+1: - 話題A
+2:   - 話題B
+3:   - 話題C
+4: - 話題D
+5:   - 話題E
+6: - 話題F
+```
+
+3 分割時、`[1-2][3][4-6]` のようにネスト途中で区切るのではなく、
+トップレベル項目の境界で `[1-3][4-5][6]` のように区切ることを期待する。
+
+### 6.3 `purpose` との重複削除
+
+現行の `notes` にある「意味的に関連する行は同じ区間に含め、話題の変わり目で区切ること」は `purpose` パートと重複しているため削除する。
 
 ---
 
-## 7. 実装順序
+## 7. タスク
 
-1. `DEFAULT_AI_PROMPT_PARTS` 定数の定義
-2. `_build_ai_system_prompt()` メソッドの実装
-3. `MarkdownParser.__init__` に `ai_prompt_extra_notes` 引数追加
-4. `_select_chunks_ai()` のシステムプロンプト組み立てを `_build_ai_system_prompt()` 呼び出しに置換
-5. `_select_chunks_ai()` のユーザープロンプトに `total_lines` 制約を移動
-6. ユニットテスト作成・実行
-7. CLI の `--ai-prompt-extra-notes` オプション追加
-8. 結合テスト作成・実行
+### 7.1 準備
+
+1. 現在（v0.2）の実装を `versions/v0.2.0/` に保持（`md2map/`, `pyproject.toml`, `spec.md`, `tests/`, `main.py`, `uv.lock`）
+2. `pyproject.toml` のバージョンを v0.3.0 に更新
+3. `spec.md` を更新（プロンプト構造化、タイトル生成廃止、`ai_prompt_extra_notes` 引数、`--ai-prompt-extra-notes` CLI オプション）
+  - (v0.3で追加)のような記載はしない。最新仕様が反映された仕様書として更新する。
+
+### 7.2 実装（対応案 B: プロンプトカスタマイズ）
+
+4. `DEFAULT_AI_PROMPT_PARTS` 定数の定義
+5. `_build_ai_system_prompt()` メソッドの実装
+6. `MarkdownParser.__init__` に `ai_prompt_extra_notes` 引数追加
+7. `_select_chunks_ai()` のシステムプロンプト組み立てを `_build_ai_system_prompt()` 呼び出しに置換
+8. `_select_chunks_ai()` のユーザープロンプトに `total_lines` 制約を移動
+9. CLI の `--ai-prompt-extra-notes` オプション追加
+
+### 7.3 実装（対応案 A: プロンプト改善）
+
+10. タイトル生成の廃止（`format` から `title` 削除、`_select_chunks_ai()` のタイトル処理削除、`_build_virtual_sections_with_titles()` 削除）
+11. `purpose` の更新（「文書の構造や意味的なまとまりを保ちつつ」）
+12. `notes` のデフォルト改善（ネスト構造保護、分割バランス指示追加、`purpose` 重複削除）
+
+### 7.4 テスト・検証
+
+13. ユニットテスト作成・実行
+14. 結合テスト作成・実行
+15. `docs/examples/v0.3/` にサンプル実行結果を出力（heading / nlp / ai 各モード）
+
+## 7.5 ドキュメント更新
+16. `spec.md`の再確認（仕様書と実装が一致していること）
+17. `CHANGELOG.md` に v0.3.0 の変更履歴を追加
+18. `versions/README.md` を更新（ディレクトリ構成例に `v0.3.0/` を追記、各バージョンの比較表を追加）
+
+---
+
+## 8. 完了チェックリスト
+
+### 8.1 機能テスト
+
+- [ ] `ai_prompt_extra_notes` 未指定時、デフォルトプロンプトで正常に分割される（ユニットテスト `test_default_prompt_unchanged`）
+- [ ] `ai_prompt_extra_notes` 指定時、`notes` パート末尾に追記される（ユニットテスト `test_prompt_extra_appended`）
+- [ ] ユーザープロンプトに `total_lines` が含まれる（ユニットテスト `test_total_lines_in_user_prompt`）
+- [ ] AI レスポンスに `title` が含まれなくてもバリデーションが通る（ユニットテスト）
+- [ ] `--ai-prompt-extra-notes` CLI オプションが LLM 呼び出しに反映される（結合テスト `test_cli_ai_prompt_extra_notes`）
+- [ ] AI モードで `_build_virtual_sections()`（`part-N` 形式）が使われる（結合テスト `test_ai_mode_with_prompt_extra`）
+
+### 8.2 後方互換性
+
+- [ ] `ai_prompt_extra_notes` 未指定時、既存の呼び出しコードが変更なしで動作する（既存テストが全て PASS）
+- [ ] `split_mode=heading` / `split_mode=nlp` に影響がない（既存テストが全て PASS）
+
+### 8.3 成果物
+
+- [ ] `versions/v0.2.0/` に旧バージョンが保持されている
+- [ ] `pyproject.toml` のバージョンが v0.3.0 になっている
+- [ ] `spec.md` が最新の設計を反映している
+- [ ] `docs/examples/v0.3/` にサンプル実行結果が出力されている
