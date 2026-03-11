@@ -229,6 +229,9 @@ md2map/
 ├── tests/                 # Test code
 │   └── fixtures/          # Test fixtures
 ├── docs/                  # Documentation
+│   ├── assets/            # Images and assets
+│   ├── examples/          # Sample outputs
+│   └── tests/             # Review results, AI test results
 ├── versions/              # Old version snapshots
 │   ├── v0.1.0/            # v0.1.0 snapshot
 │   ├── v0.2.0/            # v0.2.0 snapshot
