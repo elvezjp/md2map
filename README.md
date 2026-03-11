@@ -250,6 +250,8 @@ md2map/
 - **Single File Processing**: Currently processes one file at a time
 - **ATX Headings Only**: Setext-style headings (underline) are not supported
 - **No Link Correction**: Internal links are detected but not automatically corrected in parts
+- **NLP Mode Dependencies**: NLP mode requires SudachiPy installation
+- **AI Mode Credentials**: AI mode requires API keys or AWS credentials for each provider
 
 For details, see [spec.md](spec.md).
 

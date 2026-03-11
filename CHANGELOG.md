@@ -31,13 +31,6 @@ Added AI subsplit prompt customization. Redesigned prompt structure into 4 parts
   - LLM is no longer asked to generate titles; it now focuses solely on determining split positions
   - Removed `title` field from LLM response, simplified to `start_line` / `end_line` only
 
-### Known Limitations
-
-- NLP mode requires SudachiPy installation
-- AI mode requires API keys or AWS credentials for each provider
-- Single file processing only (directory-level analysis not supported)
-- ATX-style headings only (Setext-style underline headings not supported)
-
 ## [0.2.0] - 2026-02-19
 
 Added multi-stage splitting and multi-LLM provider support. In addition to heading-based splitting, semantic re-splitting via NLP (morphological analysis) or AI (LLM) is now available.
@@ -78,6 +71,8 @@ Added multi-stage splitting and multi-LLM provider support. In addition to headi
 - **Specification**: Added NLP mode and AI mode specifications
 
 ### Known Limitations
+
+This version has the following limitations:
 
 - NLP mode requires SudachiPy installation
 - AI mode requires API keys or AWS credentials for each provider
@@ -120,6 +115,8 @@ Initial release. MVP for converting Markdown documents into semantic maps.
 - **CI/CD**: Automated testing via GitHub Actions (Python 3.9-3.12)
 
 ### Known Limitations
+
+This version has the following limitations:
 
 - Single file processing only (directory-level analysis not supported)
 - ATX-style headings only (Setext-style underline headings not supported)
