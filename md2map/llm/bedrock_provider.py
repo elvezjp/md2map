@@ -15,7 +15,7 @@ class BedrockProvider(BaseLLMProvider):
         except ImportError as exc:
             raise RuntimeError(
                 "Bedrock provider requires 'boto3' package. "
-                "Install with: pip install md2map[ai-bedrock]"
+                "Install with: pip install md2map[ai]"
             ) from exc
 
         self._model = config.model
