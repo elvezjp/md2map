@@ -135,6 +135,7 @@ uv run md2map build document.md --dry-run
 | `--ai-provider <PROVIDER>` | `bedrock` | AIプロバイダー（`openai`/`anthropic`/`bedrock`） |
 | `--ai-model <MODEL>` | プロバイダー既定 | AIモデルID |
 | `--ai-region <REGION>` | `ap-northeast-1` | Bedrock用リージョン |
+| `--ai-prompt-extra-notes <TEXT>` | なし | AIプロンプトの注意事項パートに追記するテキスト |
 | `--verbose` | false | 詳細ログを出力 |
 | `--dry-run` | false | ファイル生成せずプレビューのみ |
 
@@ -230,6 +231,7 @@ md2map/
 ├── docs/                  # ドキュメント
 ├── versions/              # 旧バージョンスナップショット
 │   ├── v0.1.0/            # v0.1.0 スナップショット
+│   ├── v0.2.0/            # v0.2.0 スナップショット
 │   └── README.md          # versionsディレクトリの説明
 ├── CHANGELOG.md           # 変更履歴
 ├── CONTRIBUTING.md        # コントリビューションガイド

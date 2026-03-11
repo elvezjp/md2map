@@ -135,6 +135,7 @@ uv run md2map build document.md --dry-run
 | `--ai-provider <PROVIDER>` | `bedrock` | AI provider (`openai`/`anthropic`/`bedrock`) |
 | `--ai-model <MODEL>` | Provider default | AI model ID |
 | `--ai-region <REGION>` | `ap-northeast-1` | AWS region for Bedrock |
+| `--ai-prompt-extra-notes <TEXT>` | None | Text to append to the AI prompt notes section |
 | `--verbose` | false | Output detailed logs |
 | `--dry-run` | false | Preview only, no file generation |
 
@@ -230,6 +231,7 @@ md2map/
 ├── docs/                  # Documentation
 ├── versions/              # Old version snapshots
 │   ├── v0.1.0/            # v0.1.0 snapshot
+│   ├── v0.2.0/            # v0.2.0 snapshot
 │   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history
 ├── CONTRIBUTING.md        # Contribution guidelines
