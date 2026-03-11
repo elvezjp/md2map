@@ -1,131 +1,128 @@
-# 変更履歴
+# Changelog
 
-このプロジェクトに対する注目すべき変更をこのファイルに記録します。
+[English](./CHANGELOG.md) | [日本語](./CHANGELOG_ja.md)
 
-このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
-このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.3.0] - 2026-03-11
 
-AIサブスプリットのプロンプトカスタマイズに対応。プロンプト構造を4パート構成に再設計し、注意事項パートへの追記が可能になりました。また、サブスプリット命名をLLM生成タイトルから静的な `part-N` 形式に変更し、安定性を向上させました。
+Added AI subsplit prompt customization. Redesigned prompt structure into 4 parts and enabled appending to the notes section. Also changed subsplit naming from LLM-generated titles to static `part-N` format for improved stability.
 
-### 追加
+### Added
 
-- **AIプロンプトカスタマイズ**: `--ai-prompt-extra-notes` CLIオプション / `ai_prompt_extra_notes` パラメータを追加
-  - AIサブスプリットのシステムプロンプト `notes` パート末尾にユーザー指定テキストを追記可能
-  - ドメイン固有の分割ルール（例: 「Mermaidブロックの途中では分割しない」）を柔軟に指定可能
+- **AI Prompt Customization**: Added `--ai-prompt-extra-notes` CLI option / `ai_prompt_extra_notes` parameter
+  - Allows appending user-specified text to the end of the AI subsplit system prompt `notes` section
+  - Enables flexible specification of domain-specific splitting rules (e.g., "Do not split inside Mermaid code blocks")
 
-### 変更
+### Changed
 
-- **AIプロンプト構造**: ハードコードされたプロンプトを4パート構成（`role` / `purpose` / `format` / `notes`）の辞書 `DEFAULT_AI_PROMPT_PARTS` に再設計
-  - `role`・`purpose`・`format` は機能の根幹と密結合しているため外部変更不可
-  - `notes` パートのみ追記可能
-- **サブスプリット命名**: `<セクション名>: <LLM生成タイトル>` → `<セクション名>: part-N` に変更
-  - LLMにはタイトル生成を求めず、分割位置の決定に集中させる設計に変更
-  - LLMレスポンスから `title` フィールドを削除し、`start_line` / `end_line` のみに簡素化
-- **ユーザーメッセージ**: テキストの総行数（`total_lines`）をプロンプトに含めるよう変更
+- **AI Prompt Structure**: Redesigned hardcoded prompt into a 4-part dictionary `DEFAULT_AI_PROMPT_PARTS` (`role` / `purpose` / `format` / `notes`)
+  - `role`, `purpose`, and `format` are tightly coupled with core functionality and cannot be modified externally
+  - Only the `notes` section allows appending
+- **User Message**: Added total line count (`total_lines`) to the prompt
 
-### 既知の制限事項
+### Breaking Changes
 
-このバージョンには以下の制限があります：
-
-- NLPモードは SudachiPy のインストールが必要
-- AIモードは各プロバイダーのAPIキーまたはAWS認証情報が必要
-- 単一ファイルのみ対応（ディレクトリ単位の解析は未対応）
-- ATX形式の見出しのみ対応（Setext形式の下線見出しは未対応）
+- **Subsplit Naming**: Changed from `<section name>: <LLM-generated title>` to `<section name>: part-N`
+  - Output file names, INDEX, and MAP.json naming format differ from v0.2.0 AI mode output
+  - LLM is no longer asked to generate titles; it now focuses solely on determining split positions
+  - Removed `title` field from LLM response, simplified to `start_line` / `end_line` only
 
 ## [0.2.0] - 2026-02-19
 
-マルチステージ分割とマルチLLMプロバイダーに対応。見出しベースの分割に加え、NLP（形態素解析）やAI（LLM）によるセマンティック再分割が可能になりました。
+Added multi-stage splitting and multi-LLM provider support. In addition to heading-based splitting, semantic re-splitting via NLP (morphological analysis) or AI (LLM) is now available.
 
-### 追加
+### Added
 
-- **マルチステージ分割**: 見出しベースの分割に加え、長大セクションの再分割に対応
-  - `--split-mode heading`: 従来の見出しベース分割（デフォルト）
-  - `--split-mode nlp`: 形態素解析（SudachiPy）によるセマンティック分割
-  - `--split-mode ai`: LLMによるセマンティック分割
-  - `--split-threshold`: 再分割対象の最小文字数/単語数を指定できるようになりました（デフォルト: 500）
-  - `--max-subsections`: 1セクションから生成するサブセクションの最大数を指定できるようになりました（デフォルト: 5）
+- **Multi-stage Splitting**: Support for re-splitting large sections beyond heading-based splitting
+  - `--split-mode heading`: Traditional heading-based splitting (default)
+  - `--split-mode nlp`: Semantic splitting via morphological analysis (SudachiPy)
+  - `--split-mode ai`: Semantic splitting via LLM
+  - `--split-threshold`: Minimum character count (Japanese) / word count (English) for re-splitting (default: 500)
+  - `--max-subsections`: Maximum number of subsections per section (default: 5)
 
-- **マルチLLMプロバイダー**: AIモードで複数のLLMプロバイダーを選択可能
-  - `--ai-provider openai`: OpenAI API（デフォルトモデル: `gpt-4o-mini`）
-  - `--ai-provider anthropic`: Anthropic API（デフォルトモデル: `claude-haiku-4-5-20251001`）
-  - `--ai-provider bedrock`: Amazon Bedrock（デフォルト、デフォルトモデル: `global.anthropic.claude-haiku-4-5-20251001-v1:0`）
-  - `--ai-model`: モデルIDを明示的に指定可能
-  - `--ai-region`: Bedrock用リージョンを指定可能
+- **Multi-LLM Provider**: Multiple LLM providers selectable in AI mode
+  - `--ai-provider openai`: OpenAI API (default model: `gpt-4o-mini`)
+  - `--ai-provider anthropic`: Anthropic API (default model: `claude-haiku-4-5-20251001`)
+  - `--ai-provider bedrock`: Amazon Bedrock (default, default model: `global.anthropic.claude-haiku-4-5-20251001-v1:0`)
+  - `--ai-model`: Explicitly specify model ID
+  - `--ai-region`: Specify AWS region for Bedrock
 
-- **LLMプロバイダー抽象化レイヤー**: `md2map/llm/` モジュールを新規追加
-  - `BaseLLMProvider`: プロバイダー共通インターフェース
-  - `OpenAIProvider` / `AnthropicProvider` / `BedrockProvider`: 各プロバイダー実装
-  - `LLMConfig`: プロバイダー設定のデータクラス
-  - ファクトリパターンによるプロバイダー生成
+- **LLM Provider Abstraction Layer**: Added `md2map/llm/` module
+  - `BaseLLMProvider`: Common provider interface
+  - `OpenAIProvider` / `AnthropicProvider` / `BedrockProvider`: Provider implementations
+  - `LLMConfig`: Provider configuration data class
+  - Factory pattern for provider creation
 
-- **add-line-numbers**: 行番号付与ユーティリティをサブツリーとして統合
+- **add-line-numbers**: Integrated line numbering utility as a subtree
 
-- **テスト**: LLMプロバイダーのユニットテストを追加（`tests/test_llm.py`）
+- **Tests**: Added unit tests for LLM providers (`tests/test_llm.py`)
 
-- **ドキュメント**: サンプル出力を `docs/examples/v0.1/` と `docs/examples/v0.2/` に再編成し、heading / nlp / ai 各モードの出力例を追加
+- **Documentation**: Reorganized sample output into `docs/examples/v0.1/` and `docs/examples/v0.2/`, added output examples for heading / nlp / ai modes
 
-### 変更
+### Changed
 
-- **INDEX.md生成**: サブセクション（再分割されたセクション）の表示に対応
-- **MAP.json生成**: サブセクション情報の出力に対応
-- **parts/生成**: サブセクションのファイル生成に対応
-- **仕様書**: NLPモード・AIモードの仕様を追記
+- **INDEX.md Generation**: Added display support for subsections (re-split sections)
+- **MAP.json Generation**: Added subsection information output
+- **parts/ Generation**: Added subsection file generation
+- **Specification**: Added NLP mode and AI mode specifications
 
-### 既知の制限事項
+### Known Limitations
 
-このバージョンには以下の制限があります：
+This version has the following limitations:
 
-- NLPモードは SudachiPy のインストールが必要
-- AIモードは各プロバイダーのAPIキーまたはAWS認証情報が必要
-- 単一ファイルのみ対応（ディレクトリ単位の解析は未対応）
-- ATX形式の見出しのみ対応（Setext形式の下線見出しは未対応）
+- NLP mode requires SudachiPy installation
+- AI mode requires API keys or AWS credentials for each provider
+- Single file processing only (directory-level analysis not supported)
+- ATX-style headings only (Setext-style underline headings not supported)
 
 ## [0.1.0] - 2026-02-06
 
-初回リリース。Markdownドキュメントをセマンティックマップに変換するMVP版。
+Initial release. MVP for converting Markdown documents into semantic maps.
 
-### 追加
+### Added
 
-- **CLIコマンド**: `md2map build` コマンドを実装
-  - `--out`: 出力ディレクトリを指定できるようになりました（デフォルト: `./md2map-out`）
-  - `--max-depth`: 処理する見出しの最大深度を指定できるようになりました（1-6、デフォルト: 3）
-  - `--id-prefix`: セクションIDのプレフィックスを指定できるようになりました（デフォルト: `MD`）
-  - `--verbose`: 詳細なログを出力できるようになりました
-  - `--dry-run`: 実際にファイルを生成せず、計画のみ表示できるようになりました
+- **CLI Command**: Implemented `md2map build` command
+  - `--out`: Specify output directory (default: `./md2map-out`)
+  - `--max-depth`: Maximum heading depth to process (1-6, default: 3)
+  - `--id-prefix`: Section ID prefix (default: `MD`)
+  - `--verbose`: Output detailed logs
+  - `--dry-run`: Preview plan without generating files
 
-- **Markdownパーサー**: 見出しベースのドキュメント分割機能
-  - ATX形式の見出し（`#`, `##`, `###`など）の解析に対応
-  - コードブロック内の見出しを正しくスキップ
-  - 日本語ドキュメントの文字カウントに対応
+- **Markdown Parser**: Heading-based document splitting
+  - ATX-style heading (`#`, `##`, `###`, etc.) parsing
+  - Correctly skip headings inside code blocks
+  - Japanese document character counting support
 
-- **INDEX.md生成**: ドキュメント構造を可視化するMarkdownインデックス
-  - 構造ツリー（Structure Tree）の自動生成
-  - セクション詳細（パス、行番号、サマリー、キーワード、ID）の記載
+- **INDEX.md Generation**: Markdown index for visualizing document structure
+  - Auto-generated structure tree
+  - Section details (path, line numbers, summary, keywords, ID)
 
-- **parts/生成**: ドキュメントをセクション単位で分割
-  - メタデータヘッダの付与（元ファイル、行番号、セクション情報）
-  - 見出しレベルに応じた階層的な分割
+- **parts/ Generation**: Split documents into section-level parts
+  - Metadata header (source file, line numbers, section info)
+  - Hierarchical splitting based on heading levels
 
-- **MAP.json生成**: 機械可読な対応表（JSON形式）
-  - セクション情報の完全なマッピング
-  - 元ファイルの行番号との対応
-  - SHA-256チェックサムの計算
+- **MAP.json Generation**: Machine-readable mapping (JSON format)
+  - Complete section information mapping
+  - Line number correspondence with source file
+  - SHA-256 checksum calculation
 
-- **テスト**: ユニットテスト、e2eテスト、エッジケーステストを整備
+- **Tests**: Unit tests, e2e tests, and edge case tests
 
-- **CI/CD**: GitHub Actionsによる自動テスト（Python 3.9〜3.12対応）
+- **CI/CD**: Automated testing via GitHub Actions (Python 3.9-3.12)
 
-### 既知の制限事項
+### Known Limitations
 
-このバージョンには以下の制限があります：
+This version has the following limitations:
 
-- 単一ファイルのみ対応（ディレクトリ単位の解析は未対応）
-- ATX形式の見出しのみ対応（Setext形式の下線見出しは未対応）
-- 内部リンクの自動修正は未対応（検出のみ）
+- Single file processing only (directory-level analysis not supported)
+- ATX-style headings only (Setext-style underline headings not supported)
+- Internal link auto-correction not supported (detection only)
 
-## リンク
+## Links
 
-- [リポジトリ](https://github.com/elvezjp/md2map)
-- [Issueトラッカー](https://github.com/elvezjp/md2map/issues)
+- [Repository](https://github.com/elvezjp/md2map)
+- [Issue Tracker](https://github.com/elvezjp/md2map/issues)

@@ -13,7 +13,7 @@ class AnthropicProvider(BaseLLMProvider):
         except ImportError as exc:
             raise RuntimeError(
                 "Anthropic provider requires 'anthropic' package. "
-                "Install with: pip install md2map[ai-anthropic]"
+                "Install with: pip install md2map[ai]"
             ) from exc
 
         self._model = config.model

@@ -229,15 +229,21 @@ md2map/
 ├── tests/                 # Test code
 │   └── fixtures/          # Test fixtures
 ├── docs/                  # Documentation
+│   ├── assets/            # Images and assets
+│   ├── examples/          # Sample outputs
+│   └── tests/             # Review results, AI test results
 ├── versions/              # Old version snapshots
 │   ├── v0.1.0/            # v0.1.0 snapshot
 │   ├── v0.2.0/            # v0.2.0 snapshot
 │   └── README.md          # versions directory description
-├── CHANGELOG.md           # Version history
-├── CONTRIBUTING.md        # Contribution guidelines
+├── CHANGELOG.md           # Version history (English)
+├── CHANGELOG_ja.md        # Version history (Japanese)
+├── CONTRIBUTING.md        # Contribution guidelines (English)
+├── CONTRIBUTING_ja.md     # Contribution guidelines (Japanese)
 ├── README.md              # This file (English)
 ├── README_ja.md           # Japanese README
-├── SECURITY.md            # Security policy
+├── SECURITY.md            # Security policy (English)
+├── SECURITY_ja.md         # Security policy (Japanese)
 ├── spec.md                # Technical specification
 └── pyproject.toml         # Project configuration
 ```
@@ -247,6 +253,8 @@ md2map/
 - **Single File Processing**: Currently processes one file at a time
 - **ATX Headings Only**: Setext-style headings (underline) are not supported
 - **No Link Correction**: Internal links are detected but not automatically corrected in parts
+- **NLP Mode Dependencies**: NLP mode requires SudachiPy installation
+- **AI Mode Credentials**: AI mode requires API keys or AWS credentials for each provider
 
 For details, see [spec.md](spec.md).
 

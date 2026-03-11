@@ -38,9 +38,9 @@ IXVでは、システム開発における日本語の文書について、理�
 
 ## ドキュメント
 
-- [CHANGELOG.md](CHANGELOG.md) - バージョン履歴
-- [CONTRIBUTING.md](CONTRIBUTING.md) - コントリビューション方法
-- [SECURITY.md](SECURITY.md) - セキュリティポリシー
+- [CHANGELOG_ja.md](CHANGELOG_ja.md) - バージョン履歴
+- [CONTRIBUTING_ja.md](CONTRIBUTING_ja.md) - コントリビューション方法
+- [SECURITY_ja.md](SECURITY_ja.md) - セキュリティポリシー
 - [spec.md](spec.md) - 技術仕様書
 
 ## セットアップ
@@ -229,15 +229,21 @@ md2map/
 ├── tests/                 # テストコード
 │   └── fixtures/          # テストフィクスチャ
 ├── docs/                  # ドキュメント
+│   ├── assets/            # 画像・アセット
+│   ├── examples/          # サンプル出力
+│   └── tests/             # レビュー結果・AIテスト実行結果
 ├── versions/              # 旧バージョンスナップショット
 │   ├── v0.1.0/            # v0.1.0 スナップショット
 │   ├── v0.2.0/            # v0.2.0 スナップショット
 │   └── README.md          # versionsディレクトリの説明
-├── CHANGELOG.md           # 変更履歴
-├── CONTRIBUTING.md        # コントリビューションガイド
+├── CHANGELOG.md           # 変更履歴（英語）
+├── CHANGELOG_ja.md        # 変更履歴（日本語）
+├── CONTRIBUTING.md        # コントリビューションガイド（英語）
+├── CONTRIBUTING_ja.md     # コントリビューションガイド（日本語）
 ├── README.md              # 英語版README
 ├── README_ja.md           # 本ファイル（日本語版）
-├── SECURITY.md            # セキュリティポリシー
+├── SECURITY.md            # セキュリティポリシー（英語）
+├── SECURITY_ja.md         # セキュリティポリシー（日本語）
 ├── spec.md                # 技術仕様書
 └── pyproject.toml         # プロジェクト設定
 ```
@@ -247,6 +253,8 @@ md2map/
 - **単一ファイル対応**: 現在は1ファイルずつの処理
 - **ATX見出しのみ**: Setext形式の見出し（下線）には非対応
 - **リンク補正なし**: 内部リンクは検出されますが、パーツ内で自動補正されません
+- **NLPモードの依存**: NLPモードは SudachiPy のインストールが必要
+- **AIモードの認証**: AIモードは各プロバイダーのAPIキーまたはAWS認証情報が必要
 
 詳細は [spec.md](spec.md) を参照してください。
 
@@ -263,21 +271,21 @@ md2map/
 
 ## セキュリティ
 
-セキュリティに関する詳細は [SECURITY.md](SECURITY.md) を参照してください。
+セキュリティに関する詳細は [SECURITY_ja.md](SECURITY_ja.md) を参照してください。
 
 - 信頼できないソースからのファイル処理には注意してください
 - 出力ファイルには元のドキュメント内容が含まれます
 
 ## コントリビューション
 
-コントリビューションを歓迎します。詳細は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+コントリビューションを歓迎します。詳細は [CONTRIBUTING_ja.md](CONTRIBUTING_ja.md) を参照してください。
 
 - バグ報告・機能提案: [Issues](https://github.com/elvezjp/md2map/issues)
 - プルリクエスト: ブランチ命名規則 `{ユーザー名}/{日付}-{内容}`
 
 ## 変更履歴
 
-詳細は [CHANGELOG.md](CHANGELOG.md) を参照してください。
+詳細は [CHANGELOG_ja.md](CHANGELOG_ja.md) を参照してください。
 
 ## ライセンス
 
