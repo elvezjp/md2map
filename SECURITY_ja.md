@@ -23,7 +23,7 @@
    - [Security Advisories](https://github.com/elvezjp/md2map/security/advisories/new) から非公開で報告できます
 
 2. **メール**
-   - セキュリティチームへ直接連絡: security@elvez.jp
+   - [README](README_ja.md#問い合わせ先) に記載のメールアドレスへご連絡ください
 
 ### 報告に含めるべき情報
 

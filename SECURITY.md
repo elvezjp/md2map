@@ -23,7 +23,7 @@ Please report using one of the following methods:
    - Report privately via [Security Advisories](https://github.com/elvezjp/md2map/security/advisories/new)
 
 2. **Email**
-   - Contact the security team directly: security@elvez.jp
+   - Contact us at the email address listed in the [README](README.md#contact)
 
 ### Information to Include
 
