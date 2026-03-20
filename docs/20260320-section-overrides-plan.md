@@ -124,34 +124,35 @@ headings = parser.extract_headings(content, max_depth=2)
 #### オーバーライド構造
 
 ```python
-section_overrides = {
-    "default": {
+section_overrides = [
+    {
+        "start_line": 79,
         "split_mode": "ai",
-        "split_threshold": 500,
-        "max_subsections": 5,
-        "ai_prompt_extra_notes": ""
+        "max_subsections": 10,
+        "split_threshold": 300,
+        "ai_prompt_extra_notes": "項番単位で分割する"
     },
-    "overrides": [
-        {
-            "start_line": 79,
-            "split_mode": "ai",
-            "max_subsections": 10,
-            "split_threshold": 300,
-            "ai_prompt_extra_notes": "項番単位で分割する"
-        },
-        {
-            "start_line": 111,
-            "split_mode": "ai",
-            "max_subsections": 10
-            // 指定しないフィールドは default を継承
-        }
-    ]
-}
+    {
+        "start_line": 111,
+        "split_mode": "heading"
+        // 指定しないフィールドはコンストラクタ引数の値を継承
+    }
+]
 ```
 
-- `default`: 全セクションに適用されるデフォルト設定（既存の CLI パラメータと同等）
-- `overrides`: 特定セクションの設定を上書き。`start_line` で対象セクションを識別
-- overrides で省略されたフィールドは `default` の値を継承
+- `section_overrides` はオーバーライドのリスト。`start_line` で対象セクションを識別
+- overrides で省略されたフィールドはコンストラクタ引数の値（デフォルト設定）を継承
+- `default` ブロックは持たない。デフォルト設定はコンストラクタ引数（`split_mode`, `split_threshold`, `max_subsections`, `ai_prompt_extra_notes`）がそのまま使用される
+
+#### 設定の優先順位
+
+```
+セクション単位の override > コンストラクタ引数（= デフォルト設定）
+```
+
+- コンストラクタ引数が全セクションのデフォルトとなる（既存の呼び出し方と完全互換）
+- `section_overrides` は特定セクションのみ上書きする追加指定
+- これにより、既存の呼び出し元（CLI、ライブラリ）は `section_overrides` を渡さなければ従来通り動作する
 
 #### セクション識別
 
@@ -162,13 +163,20 @@ section_overrides = {
 #### 設定のマージルール
 
 ```python
-def resolve_settings(section, default_settings, override_map):
+def _resolve_settings(self, section):
     """セクションに適用する設定を解決する"""
-    override = override_map.get(section.start_line)
+    # デフォルト: コンストラクタ引数の値
+    default = {
+        "split_mode": self.split_mode,
+        "split_threshold": self.split_threshold,
+        "max_subsections": self.max_subsections,
+        "ai_prompt_extra_notes": self.ai_prompt_extra_notes or "",
+    }
+    override = self._override_map.get(section.start_line)
     if override is None:
-        return default_settings
-    # override のフィールドで default を上書き（未指定フィールドは default を維持）
-    return {**default_settings, **override}
+        return default
+    # override のフィールドで default を上書き（未指定フィールドはコンストラクタ引数を維持）
+    return {**default, **{k: v for k, v in override.items() if k != "start_line"}}
 ```
 
 ### 修正対象
@@ -190,9 +198,9 @@ class MarkdownParser:
         max_subsections=5,
         ai_prompt_extra_notes="",
         llm_config=None,
-        section_overrides=None,  # 追加
+        section_overrides=None,  # 追加: list[dict] | None
     ):
-        # 既存フィールド
+        # 既存フィールド（= 全セクションのデフォルト設定）
         self.split_mode = split_mode
         self.split_threshold = split_threshold
         self.max_subsections = max_subsections
@@ -200,10 +208,48 @@ class MarkdownParser:
         self.llm_config = llm_config
         # 新規: オーバーライドマップ（start_line → 設定 dict）
         self._override_map = {}
-        if section_overrides and "overrides" in section_overrides:
-            for o in section_overrides["overrides"]:
+        if section_overrides:
+            for o in section_overrides:
                 self._override_map[o["start_line"]] = o
+
+        # 遅延初期化: LLM provider / NLP tokenizer はオーバーライドで
+        # 必要になる可能性があるため、コンストラクタでは初期化しない場合がある。
+        # → _ensure_llm_provider(), _ensure_nlp_tokenizer() で必要時に初期化
 ```
+
+### LLM provider / NLP tokenizer の遅延初期化
+
+現在の実装ではコンストラクタで `split_mode` に応じて LLM provider や sudachipy tokenizer を初期化しているが、オーバーライドにより特定セクションだけ異なるモードを使用するケースが発生する。
+
+例: デフォルトは `split_mode="heading"` だが、特定セクションのみ `split_mode="ai"` にオーバーライド → コンストラクタ時点では LLM provider が未初期化。
+
+**対策: 遅延初期化パターン**
+
+```python
+def _ensure_llm_provider(self):
+    """LLM provider が未初期化なら初期化する（遅延初期化）"""
+    if self._llm_provider is not None:
+        return
+    if self.llm_config:
+        self._llm_provider = get_llm_provider(self.llm_config)
+    else:
+        config = build_llm_config_from_env()
+        self._llm_provider = get_llm_provider(config)
+
+def _ensure_nlp_tokenizer(self):
+    """NLP tokenizer が未初期化なら初期化する（遅延初期化）"""
+    if self._tokenizer is not None:
+        return
+    try:
+        from sudachipy import Dictionary
+        self._tokenizer = Dictionary().create()
+    except ImportError:
+        raise RuntimeError("sudachipy が必要です: pip install sudachipy sudachidict-core")
+```
+
+- コンストラクタでの初期化ロジックは維持する（デフォルトの `split_mode` に応じて初期化）
+- `_refine_sections()` 内でオーバーライドにより異なるモードが必要になった場合、上記メソッドを呼び出して遅延初期化する
+- 既にコンストラクタで初期化済みなら何もしない（冪等）
 
 ### _refine_sections() の変更
 
@@ -227,8 +273,10 @@ def _refine_sections(self, sections, lines):
         if total_count >= threshold:
             target_parts = min(max_subs, max(2, ceil(total_count / threshold)))
             if split_mode == "nlp":
+                self._ensure_nlp_tokenizer()  # 遅延初期化
                 # NLP 分割（既存ロジック）
             elif split_mode == "ai":
+                self._ensure_llm_provider()  # 遅延初期化
                 # AI 分割（既存ロジック、extra_notes を使用）
 ```
 
@@ -241,7 +289,8 @@ md2map build input.md \
 ```
 
 - `--section-overrides`: JSON ファイルパスまたは JSON 文字列
-- `--section-overrides` を指定した場合、`default` ブロックの値が `--split-mode` 等の既存オプションより優先される
+- `--split-mode` 等の既存オプションが全セクションのデフォルト設定となる
+- `--section-overrides` は特定セクションのみ上書きする追加指定
 - `--section-overrides` を指定しない場合、既存オプションがそのまま使用される（後方互換性維持）
 
 ### API（Python ライブラリとしての使用）
@@ -250,18 +299,19 @@ md2map build input.md \
 
 ```python
 parser = MarkdownParser(
-    split_mode="ai",
+    split_mode="ai",              # デフォルト設定（全セクションに適用）
     max_subsections=5,
-    section_overrides={
-        "default": {"split_mode": "ai", "max_subsections": 5, "split_threshold": 500},
-        "overrides": [
-            {"start_line": 79, "split_mode": "ai", "max_subsections": 10},
-            {"start_line": 111, "split_mode": "heading"},
-        ]
-    }
+    section_overrides=[           # 特定セクションのみ上書き
+        {"start_line": 79, "max_subsections": 10},
+        {"start_line": 111, "split_mode": "heading"},
+    ]
 )
 sections, warnings = parser.parse(file_path, max_depth=2)
 ```
+
+- コンストラクタ引数 `split_mode="ai"`, `max_subsections=5` が全セクションのデフォルト
+- start_line=79 のセクション: `max_subsections` のみ 10 に上書き（`split_mode` は "ai" を継承）
+- start_line=111 のセクション: `split_mode` を "heading" に上書き（サブスプリットなし）
 
 ---
 
@@ -286,11 +336,51 @@ sections, warnings = parser.parse(file_path, max_depth=2)
 | override なし | 従来と同じ動作（後方互換性） |
 | 単一 override | 指定セクションのみ異なる設定で分割される |
 | 複数 override | 複数セクションにそれぞれ異なる設定が適用される |
-| default 継承 | override で省略したフィールドが default から継承される |
-| 存在しない start_line | 警告を出さず、default 設定で処理される |
+| コンストラクタ引数継承 | override で省略したフィールドがコンストラクタ引数から継承される |
+| 存在しない start_line | 警告を出さず、コンストラクタ引数の設定で処理される |
 | split_mode 混在 | あるセクションは AI、別のセクションは heading で分割 |
+| 遅延初期化（AI） | デフォルト heading だが override で AI 指定時、LLM provider が遅延初期化される |
+| 遅延初期化（NLP） | デフォルト heading だが override で NLP 指定時、tokenizer が遅延初期化される |
 | JSON ファイル読み込み | CLI で JSON ファイルパスを指定して正しく読み込める |
 | JSON 文字列 | CLI で JSON 文字列を直接指定して正しく解析される |
+
+---
+
+## spec.md の更新
+
+以下のセクションを更新する。
+
+### 2.3.1 コマンド構文
+
+`headings` サブコマンドの構文を追加:
+
+```
+md2map headings <input_file> [--max-depth <N>]
+```
+
+### 2.3.2 引数・オプション
+
+以下を追加:
+
+| 引数/オプション | 必須 | デフォルト | 説明 |
+|---|---|---|---|
+| `--section-overrides <JSON>` | 任意 | なし | セクション単位の分割設定オーバーライド（JSON ファイルパスまたは JSON 文字列） |
+
+### 3.1 全体フロー
+
+見出し一覧取得（`headings` コマンド）のフローを追記。
+
+### 3.3 セクション再分割フェーズ
+
+セクション単位のオーバーライドによる設定解決の手順を追記:
+- `_resolve_settings()` による設定マージ
+- セクションごとに `split_mode`, `split_threshold`, `max_subsections`, `ai_prompt_extra_notes` が異なりうる旨
+
+### LLM provider / NLP tokenizer の遅延初期化
+
+AI モード・NLP モードの前提条件に遅延初期化の説明を追記:
+- コンストラクタ時点で不要なプロバイダー/トークナイザーは初期化しない
+- オーバーライドにより必要になった時点で初期化する
 
 ---
 
@@ -298,9 +388,44 @@ sections, warnings = parser.parse(file_path, max_depth=2)
 
 | 対象 | 影響 |
 |---|---|
-| `markdown_parser.py` | `extract_headings()` 追加、`_refine_sections()` にオーバーライド分岐追加 |
+| `markdown_parser.py` | `extract_headings()` 追加、`_refine_sections()` にオーバーライド分岐追加、遅延初期化メソッド追加 |
 | `cli.py` | `headings` サブコマンド追加、`--section-overrides` オプション追加 |
 | `section.py` | 変更なし（セクションモデルへのフィールド追加不要） |
 | `map_generator.py` | 変更なし |
+| `spec.md` | CLI 仕様・処理フローにセクションオーバーライドと見出し一覧取得を追記 |
+| `README.md` / `README_ja.md` | `headings` コマンド、`--section-overrides` オプションの使用例を追記 |
 | 既存テスト | 影響なし（後方互換性維持） |
 | CLI の後方互換性 | `--section-overrides` を指定しなければ従来通り動作 |
+
+---
+
+## 完了チェックリスト
+
+### Step 0: 退避と準備
+
+- [x] `versions/v0.3.0/` に既存実装を退避
+- [x] `pyproject.toml` の version を `"0.3.1"` に更新
+
+### Step 1: 見出し一覧取得機能
+
+- [ ] `MarkdownParser.extract_headings()` の実装
+- [ ] CLI `headings` サブコマンドの実装
+- [ ] テスト追加・全テスト通過
+- [ ] `spec.md` に `headings` コマンドの仕様を追記
+- [ ] `README.md` / `README_ja.md` に `headings` コマンドの使用例を追記
+
+### Step 2: セクション単位オーバーライド
+
+- [ ] `section_overrides` パラメータの追加（`MarkdownParser.__init__`）
+- [ ] `_resolve_settings()` の実装
+- [ ] `_ensure_llm_provider()` / `_ensure_nlp_tokenizer()` 遅延初期化の実装
+- [ ] `_refine_sections()` のオーバーライド対応
+- [ ] CLI `--section-overrides` オプションの実装
+- [ ] テスト追加・全テスト通過
+- [ ] `spec.md` にセクションオーバーライドの仕様を追記
+- [ ] `README.md` / `README_ja.md` に `--section-overrides` オプションの使用例を追記
+
+### 最終確認
+
+- [ ] 既存テストが全て通過（後方互換性）
+- [ ] `spec.md` の更新内容が実装と整合している
