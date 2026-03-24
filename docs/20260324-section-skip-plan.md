@@ -1,5 +1,7 @@
 # section_overrides に skip オプションを追加する 修正計画書
 
+> **対応完了**: PR [#12](https://github.com/elvezjp/md2map/pull/12) / Issue [#11](https://github.com/elvezjp/md2map/issues/11) にて v0.3.2 として実装済み。全 107 テストパス、v0.3.1 との後方互換性確認済み。
+
 ## 概要
 
 `section_overrides` に `"skip": true` オプションを追加し、指定セクション（およびその子セクション）を `parse()` の結果から完全に除外できるようにする。
@@ -258,7 +260,7 @@ v0.3.1 の前に v0.3.2 エントリを追加する。記載内容:
 
 ### SECURITY.md / SECURITY_ja.md
 
-サポートバージョンは `0.3.x` 表記のため、v0.3.2 でも変更不要。
+サポートバージョンを `0.3.2` のみに変更済み。
 
 ---
 
@@ -310,47 +312,47 @@ CLI 側の JSON パース・バリデーション処理に変更は不要。`ski
 
 ### Step 0: 退避と準備
 
-- [ ] `versions/v0.3.1/` に既存実装を退避
-- [ ] `pyproject.toml` の version を `"0.3.2"` に更新
+- [x] `versions/v0.3.1/` に既存実装を退避
+- [x] `pyproject.toml` の version を `"0.3.2"` に更新
 
 ### Step 1: `_resolve_settings()` の修正
 
-- [ ] `_resolve_settings()` のデフォルト辞書に `"skip": False` を追加
-- [ ] 既存テストが全て通過
+- [x] `_resolve_settings()` のデフォルト辞書に `"skip": False` を追加
+- [x] 既存テストが全て通過
 
 ### Step 2: `_filter_skipped_sections()` の実装
 
-- [ ] `_filter_skipped_sections()` の新規実装
-- [ ] `parse()` への組み込み（`_build_sections()` 後、`_refine_sections()` 前）
-- [ ] AI 要否判定の修正（skip セクションを除外）
-- [ ] 既存テストが全て通過
+- [x] `_filter_skipped_sections()` の新規実装
+- [x] `parse()` への組み込み（`_build_sections()` 後、`_refine_sections()` 前）
+- [x] AI 要否判定の修正（skip セクションを除外）
+- [x] 既存テストが全て通過
 
 ### Step 3: テストの追加
 
-- [ ] skip 関連テスト 8 件の追加
-- [ ] 全テスト通過
+- [x] skip 関連テスト 8 件の追加
+- [x] 全テスト通過（107 件）
 
 ### Step 4: ドキュメント更新
 
-- [ ] `spec.md` に skip キーの仕様・処理フローを追記
-- [ ] `README.md` / `README_ja.md` に skip の使用例を追記
+- [x] `spec.md` に skip キーの仕様・処理フローを追記
+- [x] `README.md` / `README_ja.md` に skip の使用例を追記
 
 ### Step 5: サンプル出力の追加
 
 v0.3.1 と同じ設定・同じ入力ファイルで v0.3.2 のサンプル出力を生成する（skip の例は不要）。
 
-- [ ] `docs/examples/v0.3.2/` に入力ファイルをコピー
-- [ ] heading / nlp / ai モードの出力を生成
-- [ ] `headings` コマンドの出力を生成
-- [ ] `docs/examples/README.md` に v0.3.2 のディレクトリ説明と再生成コマンドを追記
+- [x] `docs/examples/v0.3.2/` に入力ファイルをコピー
+- [x] heading / nlp / ai モードの出力を生成
+- [x] `headings` コマンドの出力を生成
+- [x] `docs/examples/README.md` に v0.3.2 のディレクトリ説明と再生成コマンドを追記
 
 ### Step 6: 更新履歴・バージョン情報の更新
 
-- [ ] `CHANGELOG.md` に v0.3.2 の更新履歴を追加
-- [ ] `CHANGELOG_ja.md` に v0.3.2 の更新履歴を追加
-- [ ] `versions/README.md` のバージョン比較表に v0.3.2 列を追加（v0.3.1 を `(現行)` から変更）
+- [x] `CHANGELOG.md` に v0.3.2 の更新履歴を追加
+- [x] `CHANGELOG_ja.md` に v0.3.2 の更新履歴を追加
+- [x] `versions/README.md` のバージョン比較表に v0.3.2 列を追加（v0.3.1 を `(現行)` から変更）
 
 ### 最終確認
 
-- [ ] 既存テストが全て通過（後方互換性）
-- [ ] `spec.md` の更新内容が実装と整合している
+- [x] 既存テストが全て通過（後方互換性、全 107 件パス）
+- [x] `spec.md` の更新内容が実装と整合している
