@@ -202,6 +202,66 @@ has_non_heading_override = any(
 
 ---
 
+## Step 5: サンプル出力の追加
+
+v0.3.1 と同じ設定・同じ入力ファイルで v0.3.2 のサンプル出力を生成する。skip はこのバージョンで追加された機能だが、サンプル出力は従来モードとの互換性確認が目的のため、skip の例は含めない。
+
+### 生成コマンド
+
+```bash
+# 入力ファイルをコピー
+cp docs/examples/v0.3.1/20260218サンプルコーディング規約.md docs/examples/v0.3.2/
+
+# heading モード
+uv run md2map build docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.3.2/output-heading --split-mode heading
+
+# NLP モード
+uv run md2map build docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.3.2/output-nlp --split-mode nlp
+
+# AI モード
+uv run md2map build docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.3.2/output-ai --split-mode ai
+
+# headings コマンド
+uv run md2map headings docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  > docs/examples/v0.3.2/headings.json
+```
+
+### docs/examples/README.md の更新
+
+- ディレクトリ構成に `v0.3.2/` を追加
+- 再生成コマンドに v0.3.2 セクションを追加
+
+---
+
+## Step 6: 更新履歴・バージョン情報の更新
+
+### CHANGELOG.md / CHANGELOG_ja.md
+
+v0.3.1 の前に v0.3.2 エントリを追加する。記載内容:
+
+- **Added**: `section_overrides` に `skip` オプションを追加（セクションとその子の除外機能）
+- **Changed**: `_resolve_settings()` に `skip` デフォルト追加、`parse()` にフィルタ処理を追加
+- **Sample output**: `docs/examples/v0.3.2/` にサンプル出力を追加
+
+### versions/README.md
+
+バージョン比較表に v0.3.2 列を追加:
+
+| 項目 | 差分 |
+|---|---|
+| セクション単位オーバーライド | + `skip: true` でセクション除外可 |
+
+`v0.3.1 (現行)` → `v0.3.1`、`v0.3.2 (現行)` に変更。
+
+### SECURITY.md / SECURITY_ja.md
+
+サポートバージョンは `0.3.x` 表記のため、v0.3.2 でも変更不要。
+
+---
+
 ## API
 
 ### Python API
@@ -238,6 +298,9 @@ CLI 側の JSON パース・バリデーション処理に変更は不要。`ski
 | `md2map/generators/` | 変更なし（`parse()` の戻り値をそのまま使用するため） |
 | `spec.md` | skip キーの仕様を追記 |
 | `README.md` / `README_ja.md` | skip の使用例を追記 |
+| `CHANGELOG.md` / `CHANGELOG_ja.md` | v0.3.2 の更新履歴を追加 |
+| `versions/README.md` | バージョン比較表に v0.3.2 を追加 |
+| `docs/examples/` | v0.3.2 のサンプル出力を追加、`README.md` に再生成コマンドを追記 |
 | 既存テスト | 影響なし（後方互換性維持） |
 | CLI の後方互換性 | `skip` を指定しなければ従来通り動作 |
 
@@ -271,6 +334,21 @@ CLI 側の JSON パース・バリデーション処理に変更は不要。`ski
 
 - [ ] `spec.md` に skip キーの仕様・処理フローを追記
 - [ ] `README.md` / `README_ja.md` に skip の使用例を追記
+
+### Step 5: サンプル出力の追加
+
+v0.3.1 と同じ設定・同じ入力ファイルで v0.3.2 のサンプル出力を生成する（skip の例は不要）。
+
+- [ ] `docs/examples/v0.3.2/` に入力ファイルをコピー
+- [ ] heading / nlp / ai モードの出力を生成
+- [ ] `headings` コマンドの出力を生成
+- [ ] `docs/examples/README.md` に v0.3.2 のディレクトリ説明と再生成コマンドを追記
+
+### Step 6: 更新履歴・バージョン情報の更新
+
+- [ ] `CHANGELOG.md` に v0.3.2 の更新履歴を追加
+- [ ] `CHANGELOG_ja.md` に v0.3.2 の更新履歴を追加
+- [ ] `versions/README.md` のバージョン比較表に v0.3.2 列を追加（v0.3.1 を `(現行)` から変更）
 
 ### 最終確認
 
