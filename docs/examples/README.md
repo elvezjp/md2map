@@ -9,7 +9,8 @@ examples/
 ├── v0.1/           # v0.1.0 の出力例（heading モードのみ）
 ├── v0.2/           # v0.2.0 の出力例（heading / nlp / ai モード）
 ├── v0.3/           # v0.3.0 の出力例（heading / nlp / ai モード）
-└── v0.3.1/         # v0.3.1 の出力例（heading / nlp / ai モード + headings コマンド）
+├── v0.3.1/         # v0.3.1 の出力例（heading / nlp / ai モード + headings コマンド）
+└── v0.3.2/         # v0.3.2 の出力例（heading / nlp / ai モード + headings コマンド）
 ```
 
 ## 入力ファイル
@@ -17,6 +18,26 @@ examples/
 - `20260218サンプルコーディング規約.md` - v0.2 以降で使用しているサンプル入力ファイル
 
 ## 再生成コマンド
+
+### v0.3.2
+
+```bash
+# heading モード
+uv run md2map build docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.3.2/output-heading --split-mode heading
+
+# NLP モード
+uv run md2map build docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.3.2/output-nlp --split-mode nlp
+
+# AI モード
+uv run md2map build docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.3.2/output-ai --split-mode ai
+
+# headings コマンド
+uv run md2map headings docs/examples/v0.3.2/20260218サンプルコーディング規約.md \
+  > docs/examples/v0.3.2/headings.json
+```
 
 ### v0.3.1
 
