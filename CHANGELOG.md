@@ -197,3 +197,4 @@ This version has the following limitations:
 
 - [Repository](https://github.com/elvezjp/md2map)
 - [Issue Tracker](https://github.com/elvezjp/md2map/issues)
+- [Version Comparison](versions/README.md)

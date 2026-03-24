@@ -197,3 +197,4 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 
 - [リポジトリ](https://github.com/elvezjp/md2map)
 - [Issueトラッカー](https://github.com/elvezjp/md2map/issues)
+- [バージョン比較](versions/README.md)
