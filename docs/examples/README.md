@@ -11,7 +11,7 @@ examples/
 ├── v0.3.0/         # v0.3.0 の出力例（heading / nlp / ai モード）
 ├── v0.3.1/         # v0.3.1 の出力例（heading / nlp / ai モード + headings コマンド）
 ├── v0.3.2/         # v0.3.2 の出力例（heading / nlp / ai モード + headings コマンド）
-└── v0.4.0/         # v0.4.0 の出力例（heading / nlp / ai モード + headings コマンド）
+└── v0.4.0/         # v0.4.0 の出力例（heading / nlp / ai / ai+summary モード + headings コマンド）
 ```
 
 ## 入力ファイル
@@ -34,6 +34,10 @@ uv run md2map build docs/examples/v0.4.0/20260218サンプルコーディング�
 # AI モード
 uv run md2map build docs/examples/v0.4.0/20260218サンプルコーディング規約.md \
   --out docs/examples/v0.4.0/output-ai --split-mode ai
+
+# AI モード + AI サマリー
+uv run md2map build docs/examples/v0.4.0/20260218サンプルコーディング規約.md \
+  --out docs/examples/v0.4.0/output-ai-summary --split-mode ai --summary-mode ai
 
 # headings コマンド
 uv run md2map headings docs/examples/v0.4.0/20260218サンプルコーディング規約.md \

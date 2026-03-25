@@ -364,6 +364,8 @@ build コマンドと同じ `_extract_headings()` + `_build_sections()` を使�
 
 `--section-overrides` が指定されている場合、セクションごとに分割設定（`split_mode`, `split_threshold`, `max_subsections`, `ai_prompt_extra_notes`, `skip`, `summary_max_chars`, `summary_mode`）を個別に解決する。オーバーライドで指定されていないフィールドはコンストラクタ引数（CLI オプション）の値を継承する。
 
+**サブスプリットへの継承**: サブスプリット（再分割で生成されたセクション）は、自身に直接オーバーライドが指定されていない場合、親セクションのオーバーライドを継承する。通常の子セクション（見出しベースの階層）は親のオーバーライドを継承しない。
+
 **オーバーライドキー**:
 
 | キー | 型 | デフォルト | 説明 |
