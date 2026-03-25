@@ -1,5 +1,7 @@
 # INDEX.md サマリー改善 修正計画書
 
+> **対応完了**: PR [#16](https://github.com/elvezjp/md2map/pull/16) / Issue [#15](https://github.com/elvezjp/md2map/issues/15) にて v0.4.0 として実装済み。全 121 テストパス、v0.3.2 との後方互換性確認済み。
+
 ## 概要
 
 INDEX.md のセクション詳細に出力される `summary` を改善する。
