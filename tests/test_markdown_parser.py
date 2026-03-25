@@ -716,3 +716,103 @@ class TestSummaryMode:
 
         # _generate_ai_summary 内で _ensure_llm_provider が呼ばれる
         assert mock_ensure.call_count > 0
+
+
+class TestSubsplitOverrideInheritance:
+    """サブスプリットへの親セクション override 継承のテスト"""
+
+    def test_parent_override_inherited_by_subsplit(self):
+        """親セクションの override がサブスプリットに継承される"""
+        from md2map.models.section import Section
+
+        parent = Section(title="Parent", level=2, start_line=6, end_line=51, original_file="test.md")
+        subsplit = Section(
+            title="Parent", level=3, start_line=21, end_line=33,
+            original_file="test.md", is_subsplit=True, parent=parent,
+        )
+
+        parser = MarkdownParser(
+            summary_mode="text",
+            section_overrides=[{"start_line": 6, "summary_mode": "ai"}],
+        )
+
+        settings = parser._resolve_settings(subsplit)
+        assert settings["summary_mode"] == "ai"
+
+    def test_subsplit_own_override_takes_priority(self):
+        """サブスプリット自身の override が親の override より優先される"""
+        from md2map.models.section import Section
+
+        parent = Section(title="Parent", level=2, start_line=6, end_line=51, original_file="test.md")
+        subsplit = Section(
+            title="Parent", level=3, start_line=21, end_line=33,
+            original_file="test.md", is_subsplit=True, parent=parent,
+        )
+
+        parser = MarkdownParser(
+            summary_mode="text",
+            section_overrides=[
+                {"start_line": 6, "summary_mode": "ai", "summary_max_chars": 200},
+                {"start_line": 21, "summary_mode": "text", "summary_max_chars": 50},
+            ],
+        )
+
+        settings = parser._resolve_settings(subsplit)
+        assert settings["summary_mode"] == "text"
+        assert settings["summary_max_chars"] == 50
+
+    def test_normal_child_does_not_inherit_parent_override(self):
+        """通常の子セクション（is_subsplit=False）は親の override を継承しない"""
+        from md2map.models.section import Section
+
+        parent = Section(title="Parent", level=1, start_line=1, end_line=100, original_file="test.md")
+        child = Section(
+            title="Child", level=2, start_line=10, end_line=50,
+            original_file="test.md", is_subsplit=False, parent=parent,
+        )
+
+        parser = MarkdownParser(
+            summary_mode="text",
+            section_overrides=[{"start_line": 1, "summary_mode": "ai"}],
+        )
+
+        settings = parser._resolve_settings(child)
+        assert settings["summary_mode"] == "text"
+
+    def test_subsplit_no_parent_override_uses_default(self):
+        """親セクションにも override がない場合、デフォルト設定が適用される"""
+        from md2map.models.section import Section
+
+        parent = Section(title="Parent", level=2, start_line=6, end_line=51, original_file="test.md")
+        subsplit = Section(
+            title="Parent", level=3, start_line=21, end_line=33,
+            original_file="test.md", is_subsplit=True, parent=parent,
+        )
+
+        parser = MarkdownParser(
+            summary_mode="text",
+            summary_max_chars=100,
+            section_overrides=[{"start_line": 999, "summary_mode": "ai"}],
+        )
+
+        settings = parser._resolve_settings(subsplit)
+        assert settings["summary_mode"] == "text"
+        assert settings["summary_max_chars"] == 100
+
+    def test_parent_summary_max_chars_inherited_by_subsplit(self):
+        """親セクションの summary_max_chars override がサブスプリットに継承される"""
+        from md2map.models.section import Section
+
+        parent = Section(title="Parent", level=2, start_line=6, end_line=51, original_file="test.md")
+        subsplit = Section(
+            title="Parent", level=3, start_line=21, end_line=33,
+            original_file="test.md", is_subsplit=True, parent=parent,
+        )
+
+        parser = MarkdownParser(
+            summary_max_chars=100,
+            section_overrides=[{"start_line": 6, "summary_max_chars": 300}],
+        )
+
+        settings = parser._resolve_settings(subsplit)
+        assert settings["summary_max_chars"] == 300

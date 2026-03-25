@@ -161,6 +161,9 @@ class MarkdownParser(BaseParser):
             "summary_mode": self.summary_mode,
         }
         override = self._override_map.get(section.start_line)
+        # サブスプリットの場合、親セクションのオーバーライドを継承する
+        if override is None and section.is_subsplit and section.parent is not None:
+            override = self._override_map.get(section.parent.start_line)
         if override is None:
             return default
         return {**default, **{k: v for k, v in override.items() if k != "start_line"}}
