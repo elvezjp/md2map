@@ -112,6 +112,13 @@ uv run md2map build document.md --split-mode ai --ai-provider anthropic
 uv run md2map build document.md --split-mode ai --ai-provider bedrock --ai-model global.anthropic.claude-haiku-4-5-20251001-v1:0
 ```
 
+### AI Summary Generation
+
+```bash
+# Generate summaries via LLM (up to 300 characters)
+uv run md2map build document.md --summary-mode ai --summary-max-chars 300
+```
+
 ### Section-Level Override
 
 ```bash
@@ -262,6 +269,8 @@ md2map/
 │   ├── v0.1.0/            # v0.1.0 snapshot
 │   ├── v0.2.0/            # v0.2.0 snapshot
 │   ├── v0.3.0/            # v0.3.0 snapshot
+│   ├── v0.3.1/            # v0.3.1 snapshot
+│   ├── v0.3.2/            # v0.3.2 snapshot
 │   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history (English)
 ├── CHANGELOG_ja.md        # Version history (Japanese)
