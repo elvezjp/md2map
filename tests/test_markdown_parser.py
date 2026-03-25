@@ -534,3 +534,185 @@ class TestSectionOverrides:
 
         # skip されたセクションは処理されないので _ensure_llm_provider は呼ばれない
         mock_ensure.assert_not_called()
+
+
+class TestSummaryMaxChars:
+    """summary_max_chars のテスト"""
+
+    def test_default_100_chars(self):
+        """デフォルト100文字で切り詰められることを確認"""
+        parser = MarkdownParser()
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+        for section in sections:
+            if section.summary:
+                assert len(section.summary) <= 100
+
+    def test_custom_max_chars(self):
+        """summary_max_chars=200 で200文字まで取得できることを確認"""
+        parser = MarkdownParser(summary_max_chars=200)
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+        for section in sections:
+            if section.summary:
+                assert len(section.summary) <= 200
+
+    def test_section_override_max_chars(self):
+        """セクションオーバーライドで文字数上限を変更できることを確認"""
+        parser = MarkdownParser(
+            summary_max_chars=10,
+            section_overrides=[
+                {"start_line": 5, "summary_max_chars": 200},
+            ],
+        )
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+
+        # H1（start_line=1）はグローバル設定の10文字
+        h1 = sections[0]
+        assert h1.summary is not None
+        assert len(h1.summary) <= 10
+
+        # Section One（start_line=5）はオーバーライドの200文字
+        section_one = [s for s in sections if s.title == "Section One"][0]
+        assert section_one.summary is not None
+        # オーバーライドにより切り詰められていない
+        assert "first section" in section_one.summary
+
+    def test_short_text_not_truncated(self):
+        """上限値より短いテキストがそのまま返ることを確認"""
+        parser = MarkdownParser(summary_max_chars=1000)
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+        section_one = [s for s in sections if s.title == "Section One"][0]
+        assert section_one.summary is not None
+        assert not section_one.summary.endswith("...")
+
+    def test_truncation_with_ellipsis(self):
+        """max_chars - 3 の位置で切り詰め + ... が付くことを確認"""
+        parser = MarkdownParser(summary_max_chars=20)
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+        # H1 のサマリーは "This is a simple markdown document for testing." なので20文字で切れる
+        h1 = sections[0]
+        assert h1.summary is not None
+        assert len(h1.summary) <= 20
+        assert h1.summary.endswith("...")
+
+
+class TestSanitizeSummary:
+    """_sanitize_summary のテスト"""
+
+    def test_newlines_removed(self):
+        """改行を含むサマリーが1行に結合されることを確認"""
+        parser = MarkdownParser()
+        result = parser._sanitize_summary("line1\nline2\nline3")
+        assert result == "line1 line2 line3"
+        assert "\n" not in result
+
+    def test_none_passthrough(self):
+        """None がそのまま None で返ることを確認"""
+        parser = MarkdownParser()
+        result = parser._sanitize_summary(None)
+        assert result is None
+
+    def test_whitespace_stripped(self):
+        """前後の空白が除去されることを確認"""
+        parser = MarkdownParser()
+        result = parser._sanitize_summary("  hello world  ")
+        assert result == "hello world"
+
+
+class TestSummaryMode:
+    """summary_mode のテスト"""
+
+    def test_default_text_mode(self):
+        """summary_mode 未指定時はルールベースで生成されることを確認"""
+        parser = MarkdownParser()
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+        section_one = [s for s in sections if s.title == "Section One"][0]
+        assert section_one.summary is not None
+        assert "first section" in section_one.summary
+
+    @patch("md2map.parsers.markdown_parser.MarkdownParser._ensure_llm_provider")
+    def test_ai_mode_calls_llm(self, mock_ensure):
+        """summary_mode='ai' でLLMが呼ばれることを確認"""
+        mock_provider = MagicMock()
+        mock_provider.send_message.return_value = "AI generated summary"
+
+        parser = MarkdownParser(summary_mode="ai")
+        parser._llm_provider = mock_provider
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+
+        assert mock_provider.send_message.call_count > 0
+        # 全セクションの summary が AI 生成結果であることを確認
+        for section in sections:
+            assert section.summary == "AI generated summary"
+
+    @patch("md2map.parsers.markdown_parser.MarkdownParser._ensure_llm_provider")
+    def test_section_override_summary_mode(self, mock_ensure):
+        """セクションオーバーライドで特定セクションのみ AI 要約を使用できることを確認"""
+        mock_provider = MagicMock()
+        mock_provider.send_message.return_value = "AI summary for section"
+
+        parser = MarkdownParser(
+            summary_mode="text",
+            section_overrides=[
+                {"start_line": 5, "summary_mode": "ai"},
+            ],
+        )
+        parser._llm_provider = mock_provider
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+
+        # Section One（start_line=5）は AI 要約
+        section_one = [s for s in sections if s.title == "Section One"][0]
+        assert section_one.summary == "AI summary for section"
+
+        # H1（start_line=1）はルールベース
+        h1 = sections[0]
+        assert h1.summary is not None
+        assert h1.summary != "AI summary for section"
+
+    @patch("md2map.parsers.markdown_parser.MarkdownParser._ensure_llm_provider")
+    def test_ai_mode_failure_returns_none(self, mock_ensure):
+        """LLM呼び出しが失敗した場合に None が返ることを確認"""
+        mock_provider = MagicMock()
+        mock_provider.send_message.side_effect = RuntimeError("API error")
+
+        parser = MarkdownParser(summary_mode="ai")
+        parser._llm_provider = mock_provider
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+
+        for section in sections:
+            assert section.summary is None
+
+    @patch("md2map.parsers.markdown_parser.MarkdownParser._ensure_llm_provider")
+    def test_text_and_ai_mixed(self, mock_ensure):
+        """グローバル text + オーバーライド ai が正しく動作することを確認"""
+        mock_provider = MagicMock()
+        mock_provider.send_message.return_value = "Mixed AI summary"
+
+        parser = MarkdownParser(
+            summary_mode="text",
+            section_overrides=[
+                {"start_line": 9, "summary_mode": "ai"},
+            ],
+        )
+        parser._llm_provider = mock_provider
+        sections, _ = parser.parse(str(FIXTURES_DIR / "simple.md"))
+
+        # Section Two（start_line=9）は AI
+        section_two = [s for s in sections if s.title == "Section Two"][0]
+        assert section_two.summary == "Mixed AI summary"
+
+        # Section One（start_line=5）はルールベース
+        section_one = [s for s in sections if s.title == "Section One"][0]
+        assert "first section" in section_one.summary
+
+    @patch("md2map.parsers.markdown_parser.MarkdownParser._ensure_llm_provider")
+    def test_ai_mode_triggers_llm_init(self, mock_ensure):
+        """summary_mode='ai' 指定時に LLM provider が初期化されることを確認"""
+        mock_provider = MagicMock()
+        mock_provider.send_message.return_value = "summary"
+
+        parser = MarkdownParser(summary_mode="ai")
+        parser._llm_provider = mock_provider
+        parser.parse(str(FIXTURES_DIR / "simple.md"))
+
+        # _generate_ai_summary 内で _ensure_llm_provider が呼ばれる
+        assert mock_ensure.call_count > 0

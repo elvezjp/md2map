@@ -162,6 +162,8 @@ uv run md2map build document.md --dry-run
 | `--ai-region <REGION>` | `ap-northeast-1` | Bedrock用リージョン |
 | `--ai-prompt-extra-notes <TEXT>` | なし | AIプロンプトの注意事項パートに追記するテキスト |
 | `--section-overrides <JSON>` | なし | セクション単位の分割設定オーバーライド（JSONファイルパスまたはJSON文字列） |
+| `--summary-max-chars <N>` | `100` | ルールベースサマリーの文字数上限 |
+| `--summary-mode <MODE>` | `text` | サマリー生成モード（`text`: ルールベース / `ai`: LLM要約） |
 | `--verbose` | false | 詳細ログを出力 |
 | `--dry-run` | false | ファイル生成せずプレビューのみ |
 

@@ -577,57 +577,57 @@ md2map build input.md \
 ### Step 0: 退避と準備
 
 - [x] `versions/v0.3.2/` に既存実装を退避
-- [ ] `pyproject.toml` の version を `"0.4.0"` に更新
+- [x] `pyproject.toml` の version を `"0.4.0"` に更新
 
 ### Step 1: 案A — `summary_max_chars` のパラメータ化
 
-- [ ] コンストラクタに `summary_max_chars` 引数を追加
-- [ ] `_resolve_settings()` のデフォルト辞書に `summary_max_chars` を追加
-- [ ] `_extract_section_info()` で設定値を `_extract_summary()` に渡す
-- [ ] `_extract_summary()` に `max_chars` 引数を追加（固定100文字を置き換え）
-- [ ] `_sanitize_summary()` を新規実装
-- [ ] `_extract_summary()` の戻り値を `_sanitize_summary()` 経由にする
-- [ ] CLI に `--summary-max-chars` オプションを追加
-- [ ] 既存テストが全て通過
+- [x] コンストラクタに `summary_max_chars` 引数を追加
+- [x] `_resolve_settings()` のデフォルト辞書に `summary_max_chars` を追加
+- [x] `_extract_section_info()` で設定値を `_extract_summary()` に渡す
+- [x] `_extract_summary()` に `max_chars` 引数を追加（固定100文字を置き換え）
+- [x] `_sanitize_summary()` を新規実装
+- [x] `_extract_summary()` の戻り値を `_sanitize_summary()` 経由にする
+- [x] CLI に `--summary-max-chars` オプションを追加
+- [x] 既存テストが全て通過
 
 ### Step 2: 案B — `--summary-mode ai` の追加
 
-- [ ] コンストラクタに `summary_mode` 引数を追加
-- [ ] `_resolve_settings()` のデフォルト辞書に `summary_mode` を追加
-- [ ] `_extract_section_info()` に `summary_mode` 分岐を追加
-- [ ] `DEFAULT_SUMMARY_PROMPT_PARTS` をモジュールレベル定数として定義
-- [ ] `_build_summary_system_prompt()` を新規実装
-- [ ] `_generate_ai_summary()` を新規実装（戻り値を `_sanitize_summary()` 経由にする）
-- [ ] CLI に `--summary-mode` オプションを追加
-- [ ] CLI の AI 要否判定に `summary_mode` を考慮
-- [ ] 既存テストが全て通過
+- [x] コンストラクタに `summary_mode` 引数を追加
+- [x] `_resolve_settings()` のデフォルト辞書に `summary_mode` を追加
+- [x] `_extract_section_info()` に `summary_mode` 分岐を追加
+- [x] `DEFAULT_SUMMARY_PROMPT_PARTS` をモジュールレベル定数として定義
+- [x] `_build_summary_system_prompt()` を新規実装
+- [x] `_generate_ai_summary()` を新規実装（戻り値を `_sanitize_summary()` 経由にする）
+- [x] CLI に `--summary-mode` オプションを追加
+- [x] CLI の AI 要否判定に `summary_mode` を考慮
+- [x] 既存テストが全て通過
 
 ### Step 3: テストの追加
 
-- [ ] `summary_max_chars` 関連テスト 5 件の追加
-- [ ] サニタイズ関連テスト 3 件の追加
-- [ ] `summary_mode` 関連テスト 6 件の追加
-- [ ] 全テスト通過
+- [x] `summary_max_chars` 関連テスト 5 件の追加
+- [x] サニタイズ関連テスト 3 件の追加
+- [x] `summary_mode` 関連テスト 6 件の追加
+- [x] 全テスト通過（121 件）
 
 ### Step 4: ドキュメント更新
 
-- [ ] `spec.md` に新オプションの仕様を追記
-- [ ] `README.md` / `README_ja.md` に新オプションの使用例を追記
+- [x] `spec.md` に新オプションの仕様を追記
+- [x] `README.md` / `README_ja.md` に新オプションの使用例を追記
 
 ### Step 5: サンプル出力の追加
 
-- [ ] `docs/examples/v0.4.0/` に入力ファイルをコピー
-- [ ] heading / nlp / ai モードの出力を生成
-- [ ] `headings` コマンドの出力を生成
-- [ ] `docs/examples/README.md` に v0.4.0 のディレクトリ説明と再生成コマンドを追記
+- [x] `docs/examples/v0.4.0/` に入力ファイルをコピー
+- [x] heading / nlp / ai モードの出力を生成
+- [x] `headings` コマンドの出力を生成
+- [x] `docs/examples/README.md` に v0.4.0 のディレクトリ説明と再生成コマンドを追記
 
 ### Step 6: 更新履歴・バージョン情報の更新
 
-- [ ] `CHANGELOG.md` に v0.4.0 の更新履歴を追加
-- [ ] `CHANGELOG_ja.md` に v0.4.0 の更新履歴を追加
-- [ ] `versions/README.md` のバージョン比較表に v0.4.0 列を追加
+- [x] `CHANGELOG.md` に v0.4.0 の更新履歴を追加
+- [x] `CHANGELOG_ja.md` に v0.4.0 の更新履歴を追加
+- [x] `versions/README.md` のバージョン比較表に v0.4.0 列を追加
 
 ### 最終確認
 
-- [ ] 既存テストが全て通過（後方互換性）
-- [ ] `spec.md` の更新内容が実装と整合している
+- [x] 既存テストが全て通過（後方互換性、全 121 件パス）
+- [x] `spec.md` の更新内容が実装と整合している

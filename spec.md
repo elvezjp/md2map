@@ -189,6 +189,8 @@ md2map headings <input_file> [--max-depth <N>]
 | `--ai-region <REGION>` | 任意 | `ap-northeast-1` | Bedrock 用リージョン（未指定時は環境変数 `AWS_REGION` またはデフォルト） |
 | `--ai-prompt-extra-notes <TEXT>` | 任意 | なし | AI サブスプリットのシステムプロンプト注意事項パートに追記するテキスト |
 | `--section-overrides <JSON>` | 任意 | なし | セクション単位の分割設定オーバーライド（JSON ファイルパスまたは JSON 文字列） |
+| `--summary-max-chars <N>` | 任意 | 100 | ルールベースサマリーの文字数上限 |
+| `--summary-mode <MODE>` | 任意 | `text` | サマリー生成モード（`text`: ルールベース / `ai`: LLM要約） |
 
 **headings コマンド**
 
@@ -360,7 +362,7 @@ build コマンドと同じ `_extract_headings()` + `_build_sections()` を使�
 
 `--split-mode` が `nlp` または `ai` の場合、見出しベースで抽出されたセクションのうち、再分割条件を満たすものに対してサブスプリットを挿入する。
 
-`--section-overrides` が指定されている場合、セクションごとに分割設定（`split_mode`, `split_threshold`, `max_subsections`, `ai_prompt_extra_notes`, `skip`）を個別に解決する。オーバーライドで指定されていないフィールドはコンストラクタ引数（CLI オプション）の値を継承する。
+`--section-overrides` が指定されている場合、セクションごとに分割設定（`split_mode`, `split_threshold`, `max_subsections`, `ai_prompt_extra_notes`, `skip`, `summary_max_chars`, `summary_mode`）を個別に解決する。オーバーライドで指定されていないフィールドはコンストラクタ引数（CLI オプション）の値を継承する。
 
 **オーバーライドキー**:
 
@@ -372,6 +374,8 @@ build コマンドと同じ `_extract_headings()` + `_build_sections()` を使�
 | `max_subsections` | int | 継承 | 仮想見出しの最大数 |
 | `ai_prompt_extra_notes` | str | 継承 | AI プロンプト注意事項への追記テキスト |
 | `skip` | bool | `false` | `true` の場合、該当セクションとその子セクションを出力から除外する |
+| `summary_max_chars` | int | 継承 | ルールベースサマリーの文字数上限 |
+| `summary_mode` | str | 継承 | サマリー生成モード（`text`/`ai`） |
 
 **セクション単位の設定解決**:
 
