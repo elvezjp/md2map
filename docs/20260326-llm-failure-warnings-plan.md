@@ -183,33 +183,33 @@ AI 分割失敗時の挙動として、`warnings` にエラーメッセージが
 
 ### Step 1: v0.4.0 の退避と v0.4.1 の準備
 
-- [ ] `versions/v0.4.0/` に既存実装を退避
-- [ ] `pyproject.toml` の version を `"0.4.1"` に更新
-- [ ] `spec.md` にバージョン番号を反映
+- [x] `versions/v0.4.0/` に既存実装を退避
+- [x] `pyproject.toml` の version を `"0.4.1"` に更新
+- [x] `spec.md` にバージョン番号を反映
 
 ### Step 2: `_warnings` インスタンス変数の導入
 
-- [ ] `parse()` 内で `self._warnings = warnings` を追加
+- [x] `parse()` 内で `self._warnings = warnings` を追加
 
 ### Step 3: LLM 失敗時の warnings 追加
 
-- [ ] `_generate_ai_summary()` の `except` ブロックに `self._warnings.append()` を追加
-- [ ] `_select_chunks_ai()` の `except` ブロックに `self._warnings.append()` を追加
+- [x] `_generate_ai_summary()` の `except` ブロックに `self._warnings.append()` を追加
+- [x] `_select_chunks_ai()` の `except` ブロックに `self._warnings.append()` を追加
 
 ### Step 4: テストの追加
 
-- [ ] AI サマリー失敗時の warning テスト
-- [ ] AI 分割失敗時の warning テスト
-- [ ] 複数セクション失敗時のテスト
-- [ ] 成功時は warning なしのテスト
-- [ ] 全テスト通過
+- [x] AI サマリー失敗時の warning テスト
+- [x] AI 分割失敗時の warning テスト
+- [x] 複数セクション失敗時のテスト
+- [x] 成功時は warning なしのテスト
+- [x] 全テスト通過（130 件）
 
 ### Step 5: spec.md の更新
 
-- [ ] AI サマリー失敗時の warnings 追記
-- [ ] AI 分割失敗時の warnings 追記
+- [x] AI サマリー失敗時の warnings 追記
+- [x] AI 分割失敗時の warnings 追記
 
 ### 最終確認
 
-- [ ] 既存テストが全て通過（後方互換性維持）
-- [ ] `spec.md` の更新内容が実装と整合している
+- [x] 既存テストが全て通過（後方互換性維持、全 130 件パス）
+- [x] `spec.md` の更新内容が実装と整合している
