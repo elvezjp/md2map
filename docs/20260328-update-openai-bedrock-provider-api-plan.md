@@ -651,29 +651,29 @@ spec.md の「6.1 LLM プロバイダー抽象化」に「LLM 設定の解決順
 
 ### Step 9: `.env` ファイル対応
 
-- [ ] `pyproject.toml` に `python-dotenv>=1.0` を追加
-- [ ] `cli.py` の `main()` に `load_dotenv(override=False)` を追加
-- [ ] `.env.example` を作成
-- [ ] `.gitignore` に `.env` が含まれていることを確認
+- [x] `pyproject.toml` に `python-dotenv>=1.0` を追加
+- [x] `cli.py` の `main()` に `load_dotenv(override=False)` を追加
+- [x] `.env.example` を作成
+- [x] `.gitignore` に `.env` が含まれていることを確認（既存）
 
 ### Step 10: README の認証情報記載
 
-- [ ] `README.md` に認証設定セクションを追加
-- [ ] `README_ja.md` に認証設定セクションを追加
+- [x] `README.md` に認証設定セクションを追加
+- [x] `README_ja.md` に認証設定セクションを追加
 
 ### Step 11: spec.md の更新
 
-- [ ] 認証情報の解決順序に `.env` と外部注入を追記
+- [x] 認証情報の解決順序に `.env` と外部注入を追記
 
 ### Step 12: テストの追加
 
-- [ ] `.env` 読み込みテスト
-- [ ] dotenv 未インストール時のテスト
-- [ ] 環境変数優先テスト
-- [ ] 全テスト通過
+- [x] `.env` 読み込みテスト
+- [x] dotenv 未インストール時のテスト
+- [x] 環境変数優先テスト
+- [x] 全テスト通過（136件）
 
 ### 最終確認
 
-- [ ] 既存テストが全て通過（後方互換性維持）
-- [ ] README の英語・日本語が整合している
-- [ ] `spec.md` の更新内容が実装と整合している
+- [x] 既存テストが全て通過（後方互換性維持、全 136 件パス）
+- [x] README の英語・日本語が整合している
+- [x] `spec.md` の更新内容が実装と整合している
