@@ -7,6 +7,30 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
+## [0.4.2] - 2026-03-28
+
+OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に更新。OpenAI は `max_completion_tokens` パラメータを使用するよう変更（gpt-5.2 以降で必須）。Bedrock は `invoke_model` から Converse API に移行し、マルチモデル対応を実現しました。
+
+### 変更
+
+- **OpenAI プロバイダー**: `chat.completions.create()` のパラメータを `max_tokens` から `max_completion_tokens` に変更
+  - gpt-5.2 以降の新しい OpenAI モデルで `max_tokens` が廃止されたことへの対応
+
+- **Bedrock プロバイダー**: `invoke_model`（生 JSON body）から `converse` API に移行
+  - Anthropic 専用の `anthropic_version` + `invoke_model` を、モデル非依存の Converse API に置き換え
+  - トークン上限の指定を JSON body 内の `max_tokens` から `inferenceConfig={"maxTokens": ...}` に変更
+  - Anthropic / Amazon Nova 等の Bedrock 対応モデルを広くサポート
+  - `import json` 依存を削除（不要になったため）
+
+### 既知の制限事項
+
+このバージョンには以下の制限があります：
+
+- NLPモードは SudachiPy のインストールが必要
+- AIモードは各プロバイダーのAPIキーまたはAWS認証情報が必要
+- 単一ファイルのみ対応（ディレクトリ単位の解析は未対応）
+- ATX形式の見出しのみ対応（Setext形式の下線見出しは未対応）
+
 ## [0.4.1] - 2026-03-26
 
 LLM 呼び出し失敗時のエラー情報を `parse()` の戻り値 `warnings` に含めるよう改善。呼び出し元（バックエンド API 等）が AI 分割・AI サマリーの失敗を検知できるようになりました。また、サブスプリットが親セクションの `section_overrides` 設定を継承するよう修正しました。

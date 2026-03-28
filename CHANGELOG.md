@@ -7,6 +7,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-03-28
+
+Updated OpenAI and Bedrock LLM provider API calls to latest specifications. OpenAI now uses `max_completion_tokens` parameter (required for gpt-5.2+). Bedrock migrated from `invoke_model` to Converse API for multi-model support.
+
+### Changed
+
+- **OpenAI provider**: Changed `max_tokens` parameter to `max_completion_tokens` in `chat.completions.create()` call
+  - Required for newer OpenAI models (gpt-5.2 and later) that no longer support `max_tokens`
+
+- **Bedrock provider**: Migrated from `invoke_model` (raw JSON body) to `converse` API
+  - Replaced Anthropic-specific `anthropic_version` + `invoke_model` with model-agnostic Converse API
+  - Token limit now specified via `inferenceConfig={"maxTokens": ...}` instead of JSON body
+  - Supports Anthropic, Amazon Nova, and other Bedrock-compatible models
+  - Removed `import json` dependency (no longer needed)
+
+### Known Limitations
+
+This version has the following limitations:
+
+- NLP mode requires SudachiPy installation
+- AI mode requires API keys or AWS credentials for each provider
+- Single file processing only (directory-level analysis not supported)
+- ATX-style headings only (Setext-style underline headings not supported)
+
 ## [0.4.1] - 2026-03-26
 
 Improved error reporting by including LLM call failure information in the `warnings` list returned by `parse()`. Callers (e.g., backend APIs) can now detect AI split and AI summary failures. Also fixed subsplits to inherit parent section's `section_overrides` settings.
