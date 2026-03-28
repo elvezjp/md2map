@@ -294,8 +294,31 @@ This version has the following limitations:
 - ATX-style headings only (Setext-style underline headings not supported)
 - Internal link auto-correction not supported (detection only)
 
+## Version Comparison
+
+| Version | Highlights |
+| ------- | ---------- |
+| 0.4.2 | OpenAI/Bedrock client APIs updated; `.env` loading; authentication docs |
+| 0.4.1 | LLM failures surfaced in `parse()` warnings; subsplit inherits `section_overrides` |
+| 0.4.0 | Configurable rule-based summaries; per-section AI summary mode |
+| 0.3.2 | `section_overrides` `skip` to exclude sections (and children) from parsing |
+| 0.3.1 | `headings` subcommand; `--section-overrides`; lazy LLM/NLP initialization |
+| 0.3.0 | AI prompt `notes` customization; stable `part-N` subsplit naming |
+| 0.2.0 | NLP and AI split modes; multi-provider LLM (OpenAI, Anthropic, Bedrock) |
+| 0.1.0 | Initial release: heading-based split, INDEX.md, parts/, MAP.json |
+
+For frozen source trees per release, see [versions/README.md](versions/README.md).
+
 ## Links
 
 - [Repository](https://github.com/elvezjp/md2map)
 - [Issue Tracker](https://github.com/elvezjp/md2map/issues)
-- [Version Comparison](versions/README.md)
+
+[0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/elvezjp/md2map/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/elvezjp/md2map/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/elvezjp/md2map/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/elvezjp/md2map/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/elvezjp/md2map/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/elvezjp/md2map/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/elvezjp/md2map/releases/tag/v0.1.0
