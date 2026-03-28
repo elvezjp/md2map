@@ -420,3 +420,260 @@ OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に�
 - [x] `spec.md` の更新内容が実装と整合している
 - [x] CHANGELOG の英語・日本語が整合している
 - [x] バージョン番号がすべてのファイルで `0.4.2` に統一されている
+
+---
+---
+
+# 追加計画: AI プロバイダー認証情報の設定方法整備
+
+対応 Issue: [#22](https://github.com/elvezjp/md2map/issues/22)
+
+## 概要
+
+AI モードで OpenAI / Anthropic / Bedrock を使用する際の認証情報について、`.env` ファイル対応、外部注入時の優先順位明確化、README への設定方法記載を行う。
+
+## 背景
+
+- 現在 `build_llm_config_from_env()` が `os.getenv()` で環境変数を直接読み取っているが、`.env` ファイルからの読み込みはサポートしていない
+- 外部アプリケーション（spec-code-ai-reviewer 等）から `LLMConfig` を注入する場合の優先順位が明文化されていない
+- README に認証情報の設定方法が記載されていない
+
+## 現状の認証情報解決フロー
+
+```
+CLI (--ai-provider openai)
+  → cli.py: build_llm_config_from_env(provider="openai")
+    → factory.py: os.getenv("OPENAI_API_KEY")
+      → LLMConfig(provider="openai", api_key=..., model=...)
+        → MarkdownParser(llm_config=...)
+```
+
+外部アプリからの注入パス（spec-code-ai-reviewer の例）:
+
+```
+外部アプリの LLMConfig
+  → _convert_to_md2map_llm_config()
+    → md2map の LLMConfig(provider=..., api_key=..., ...)
+      → MarkdownParser(llm_config=...)
+```
+
+## 認証情報の優先順位（設計）
+
+```
+1. llm_provider（直接注入されたプロバイダーインスタンス）  ← 既存
+2. llm_config（直接注入された設定オブジェクト）            ← 既存
+3. CLI オプション + 環境変数（build_llm_config_from_env）  ← 既存
+4. .env ファイル                                          ← 新規
+```
+
+MarkdownParser のコンストラクタでの既存の優先順位（`llm_provider` > `llm_config` > `build_llm_config_from_env`）は変更しない。`.env` ファイルは `build_llm_config_from_env` 内で `os.getenv()` が参照する環境変数のソースとして機能する。
+
+---
+
+## Step 9: `.env` ファイル対応
+
+### 方針
+
+CLI のエントリポイント（`cli.py` の `main()`）で `.env` ファイルを読み込む。`python-dotenv` パッケージを使用し、既存の環境変数を上書きしない（`override=False`）。
+
+これにより `build_llm_config_from_env()` 内の `os.getenv()` が `.env` の値を透過的に参照できる。`factory.py` 自体の変更は不要。
+
+### `pyproject.toml` の変更
+
+`python-dotenv` を `ai` オプション依存に追加する。
+
+```toml
+[project.optional-dependencies]
+ai = [
+    "openai>=1.0",
+    "anthropic>=0.18",
+    "boto3>=1.28",
+    "python-dotenv>=1.0",
+]
+```
+
+### `cli.py` の変更
+
+`main()` の先頭で `.env` を読み込む。`python-dotenv` が未インストールの場合は無視する（AI モードを使わないユーザーは `md2map[ai]` をインストールしないため）。
+
+```python
+def main() -> int:
+    # .env ファイルの読み込み（python-dotenv がインストールされている場合のみ）
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(override=False)
+    except ImportError:
+        pass
+
+    # ... 既存処理 ...
+```
+
+### `.env.example` の作成
+
+プロジェクトルートに `.env.example` を作成し、設定可能な環境変数の一覧を記載する。
+
+```bash
+# OpenAI
+OPENAI_API_KEY=sk-...
+# OPENAI_MODEL=gpt-4o-mini
+
+# Anthropic
+# ANTHROPIC_API_KEY=sk-ant-...
+
+# Amazon Bedrock
+# AWS_ACCESS_KEY_ID=AKIA...
+# AWS_SECRET_ACCESS_KEY=...
+# AWS_REGION=ap-northeast-1
+
+# Common
+# MD2MAP_AI_MODEL=gpt-4o-mini
+```
+
+### `.gitignore` の確認
+
+`.env` が `.gitignore` に含まれていることを確認する。含まれていなければ追加する。
+
+### 修正対象
+
+| ファイル | 修正内容 |
+|---|---|
+| `pyproject.toml` | `ai` 依存に `python-dotenv>=1.0` を追加 |
+| `md2map/cli.py` | `main()` 先頭で `load_dotenv(override=False)` を追加 |
+| `.env.example` | 新規作成（環境変数一覧テンプレート） |
+| `.gitignore` | `.env` が含まれていることを確認 |
+
+---
+
+## Step 10: README.md / README_ja.md への認証情報設定方法の記載
+
+### README.md（英語）
+
+「AI Mode Splitting」セクションの前に「Authentication」セクションを追加する。
+
+```markdown
+### Authentication (AI Mode)
+
+AI mode requires credentials for the selected provider. Set them via environment variables or a `.env` file.
+
+| Provider | Required Environment Variables | Default Model |
+|----------|-------------------------------|---------------|
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-haiku-4-5-20251001` |
+| Bedrock | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (or IAM role) | `global.anthropic.claude-haiku-4-5-20251001-v1:0` |
+
+You can also set `MD2MAP_AI_MODEL` to override the default model for any provider.
+
+#### Using a `.env` file
+
+Copy the template and fill in your credentials:
+
+\```bash
+cp .env.example .env
+# Edit .env with your credentials
+\```
+
+Environment variables set in the shell take precedence over `.env` values.
+```
+
+### README_ja.md（日本語）
+
+README.md と同等の内容を日本語で記載する。
+
+### 修正対象
+
+| ファイル | 修正内容 |
+|---|---|
+| `README.md` | 「Authentication (AI Mode)」セクションを追加 |
+| `README_ja.md` | 「認証設定（AI モード）」セクションを追加 |
+
+---
+
+## Step 11: spec.md の認証情報解決順序の更新
+
+### 既存の記述
+
+spec.md の「6.1 LLM プロバイダー抽象化」に「LLM 設定の解決順序」がある。ここに `.env` ファイルと外部注入の優先順位を追記する。
+
+```markdown
+**LLM 設定の解決順序**:
+1. `llm_provider`（プロバイダーインスタンスの直接注入）
+2. `llm_config`（設定オブジェクトの直接注入）
+3. CLI オプション（`--ai-model`, `--ai-region`）
+4. 環境変数（`MD2MAP_AI_MODEL`, `AWS_REGION` 等）
+5. `.env` ファイル（`override=False` のため、既存環境変数より低優先）
+6. プロバイダーごとのデフォルト値
+```
+
+### 修正対象
+
+| ファイル | 修正内容 |
+|---|---|
+| `spec.md` | 認証情報の解決順序に `.env` と外部注入を追記 |
+
+---
+
+## Step 12: テストの追加
+
+### テストケース
+
+| # | ケース | 内容 |
+|---|---|---|
+| 1 | `.env` 読み込み確認 | `load_dotenv` が CLI 起動時に呼ばれることを確認（モック） |
+| 2 | dotenv 未インストール時 | `ImportError` が握りつぶされ、正常に動作することを確認 |
+| 3 | 環境変数優先確認 | 環境変数と `.env` の両方が設定されている場合、環境変数が優先されることを確認 |
+
+### 修正対象
+
+| ファイル | 修正内容 |
+|---|---|
+| `tests/test_cli.py` | `.env` 読み込みに関するテストを追加 |
+
+---
+
+## 追加計画の影響範囲
+
+| 対象 | 影響 |
+|---|---|
+| `pyproject.toml` | `ai` 依存に `python-dotenv>=1.0` を追加 |
+| `md2map/cli.py` | `main()` 先頭に `load_dotenv` 追加（3行） |
+| `.env.example` | 新規作成 |
+| `.gitignore` | `.env` の確認・追加 |
+| `README.md` | 認証設定セクション追加 |
+| `README_ja.md` | 認証設定セクション追加 |
+| `spec.md` | 解決順序の更新 |
+| `tests/test_cli.py` | テスト追加 |
+| `md2map/llm/factory.py` | **変更なし**（`.env` は `os.getenv` で透過的に参照される） |
+| `md2map/llm/config.py` | **変更なし** |
+
+---
+
+## 追加計画の完了チェックリスト
+
+### Step 9: `.env` ファイル対応
+
+- [x] `pyproject.toml` に `python-dotenv>=1.0` を追加
+- [x] `cli.py` の `main()` に `load_dotenv(override=False)` を追加
+- [x] `.env.example` を作成
+- [x] `.gitignore` に `.env` が含まれていることを確認（既存）
+
+### Step 10: README の認証情報記載
+
+- [x] `README.md` に認証設定セクションを追加
+- [x] `README_ja.md` に認証設定セクションを追加
+
+### Step 11: spec.md の更新
+
+- [x] 認証情報の解決順序に `.env` と外部注入を追記
+
+### Step 12: テストの追加
+
+- [x] `.env` 読み込みテスト
+- [x] dotenv 未インストール時のテスト
+- [x] 環境変数優先テスト
+- [x] 全テスト通過（136件）
+
+### 最終確認
+
+- [x] 既存テストが全て通過（後方互換性維持、全 136 件パス）
+- [x] README の英語・日本語が整合している
+- [x] `spec.md` の更新内容が実装と整合している

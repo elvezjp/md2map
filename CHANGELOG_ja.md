@@ -22,6 +22,18 @@ OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に�
   - Anthropic / Amazon Nova 等の Bedrock 対応モデルを広くサポート
   - `import json` 依存を削除（不要になったため）
 
+### 追加
+
+- **`.env` ファイル対応**: CLI 起動時に `python-dotenv` で `.env` ファイルを読み込むよう対応
+  - 既存の環境変数が優先される（`override=False`）
+  - `.env.example` テンプレートを同梱
+  - `python-dotenv` を `ai` オプション依存に追加
+
+- **認証情報のドキュメント**: README に認証設定ガイドを追加
+  - プロバイダーごとの必要な環境変数一覧（OpenAI / Anthropic / Bedrock）
+  - `.env` ファイルの使用方法
+  - spec.md に LLM 設定の解決順序を追記
+
 ### 既知の制限事項
 
 このバージョンには以下の制限があります：
@@ -282,8 +294,31 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 - ATX形式の見出しのみ対応（Setext形式の下線見出しは未対応）
 - 内部リンクの自動修正は未対応（検出のみ）
 
+## バージョン比較
+
+| バージョン | 主な内容 |
+| ---------- | -------- |
+| 0.4.2 | OpenAI／Bedrock の API 呼び出し更新、`.env` 読み込み、認証まわりのドキュメント |
+| 0.4.1 | LLM 失敗を `parse()` の `warnings` に反映、サブスプリットが `section_overrides` を継承 |
+| 0.4.0 | ルールベース要約の調整、セクション単位の AI 要約モード |
+| 0.3.2 | `section_overrides` の `skip` でセクション（子含む）を解析対象から除外 |
+| 0.3.1 | `headings` サブコマンド、`--section-overrides`、LLM／NLP の遅延初期化 |
+| 0.3.0 | AI プロンプト `notes` の追記、サブスプリット名の `part-N` 固定化 |
+| 0.2.0 | NLP／AI 分割モード、マルチ LLM プロバイダー（OpenAI／Anthropic／Bedrock） |
+| 0.1.0 | 初回リリース（見出し分割、INDEX.md、parts/、MAP.json） |
+
+リリースごとのソーススナップショットは [versions/README.md](versions/README.md) を参照してください。
+
 ## リンク
 
 - [リポジトリ](https://github.com/elvezjp/md2map)
 - [Issueトラッカー](https://github.com/elvezjp/md2map/issues)
-- [バージョン比較](versions/README.md)
+
+[0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/elvezjp/md2map/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/elvezjp/md2map/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/elvezjp/md2map/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/elvezjp/md2map/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/elvezjp/md2map/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/elvezjp/md2map/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/elvezjp/md2map/releases/tag/v0.1.0

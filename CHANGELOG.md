@@ -22,6 +22,18 @@ Updated OpenAI and Bedrock LLM provider API calls to latest specifications. Open
   - Supports Anthropic, Amazon Nova, and other Bedrock-compatible models
   - Removed `import json` dependency (no longer needed)
 
+### Added
+
+- **`.env` file support**: CLI now loads `.env` file at startup via `python-dotenv`
+  - Existing environment variables take precedence (`override=False`)
+  - `.env.example` template included for reference
+  - `python-dotenv` added to `ai` optional dependencies
+
+- **Authentication documentation**: Added credential setup guide to README
+  - Required environment variables per provider (OpenAI / Anthropic / Bedrock)
+  - `.env` file usage instructions
+  - LLM config resolution order documented in spec.md
+
 ### Known Limitations
 
 This version has the following limitations:
@@ -282,8 +294,31 @@ This version has the following limitations:
 - ATX-style headings only (Setext-style underline headings not supported)
 - Internal link auto-correction not supported (detection only)
 
+## Version Comparison
+
+| Version | Highlights |
+| ------- | ---------- |
+| 0.4.2 | OpenAI/Bedrock client APIs updated; `.env` loading; authentication docs |
+| 0.4.1 | LLM failures surfaced in `parse()` warnings; subsplit inherits `section_overrides` |
+| 0.4.0 | Configurable rule-based summaries; per-section AI summary mode |
+| 0.3.2 | `section_overrides` `skip` to exclude sections (and children) from parsing |
+| 0.3.1 | `headings` subcommand; `--section-overrides`; lazy LLM/NLP initialization |
+| 0.3.0 | AI prompt `notes` customization; stable `part-N` subsplit naming |
+| 0.2.0 | NLP and AI split modes; multi-provider LLM (OpenAI, Anthropic, Bedrock) |
+| 0.1.0 | Initial release: heading-based split, INDEX.md, parts/, MAP.json |
+
+For frozen source trees per release, see [versions/README.md](versions/README.md).
+
 ## Links
 
 - [Repository](https://github.com/elvezjp/md2map)
 - [Issue Tracker](https://github.com/elvezjp/md2map/issues)
-- [Version Comparison](versions/README.md)
+
+[0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/elvezjp/md2map/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/elvezjp/md2map/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/elvezjp/md2map/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/elvezjp/md2map/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/elvezjp/md2map/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/elvezjp/md2map/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/elvezjp/md2map/releases/tag/v0.1.0
