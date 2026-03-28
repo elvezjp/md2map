@@ -22,6 +22,18 @@ Updated OpenAI and Bedrock LLM provider API calls to latest specifications. Open
   - Supports Anthropic, Amazon Nova, and other Bedrock-compatible models
   - Removed `import json` dependency (no longer needed)
 
+### Added
+
+- **`.env` file support**: CLI now loads `.env` file at startup via `python-dotenv`
+  - Existing environment variables take precedence (`override=False`)
+  - `.env.example` template included for reference
+  - `python-dotenv` added to `ai` optional dependencies
+
+- **Authentication documentation**: Added credential setup guide to README
+  - Required environment variables per provider (OpenAI / Anthropic / Bedrock)
+  - `.env` file usage instructions
+  - LLM config resolution order documented in spec.md
+
 ### Known Limitations
 
 This version has the following limitations:

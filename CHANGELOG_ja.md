@@ -22,6 +22,18 @@ OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に�
   - Anthropic / Amazon Nova 等の Bedrock 対応モデルを広くサポート
   - `import json` 依存を削除（不要になったため）
 
+### 追加
+
+- **`.env` ファイル対応**: CLI 起動時に `python-dotenv` で `.env` ファイルを読み込むよう対応
+  - 既存の環境変数が優先される（`override=False`）
+  - `.env.example` テンプレートを同梱
+  - `python-dotenv` を `ai` オプション依存に追加
+
+- **認証情報のドキュメント**: README に認証設定ガイドを追加
+  - プロバイダーごとの必要な環境変数一覧（OpenAI / Anthropic / Bedrock）
+  - `.env` ファイルの使用方法
+  - spec.md に LLM 設定の解決順序を追記
+
 ### 既知の制限事項
 
 このバージョンには以下の制限があります：
