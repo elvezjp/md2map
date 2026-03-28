@@ -374,49 +374,49 @@ OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に�
 
 ### Step 1: v0.4.1 の退避と v0.4.2 の準備
 
-- [ ] `versions/v0.4.1/` に既存実装を退避
-- [ ] `pyproject.toml` の version を `"0.4.2"` に更新
+- [x] `versions/v0.4.1/` に既存実装を退避
+- [x] `pyproject.toml` の version を `"0.4.2"` に更新
 
 ### Step 2: OpenAI プロバイダーの修正
 
-- [ ] `max_tokens` → `max_completion_tokens` に変更
+- [x] `max_tokens` → `max_completion_tokens` に変更
 
 ### Step 3: Bedrock プロバイダーの修正
 
-- [ ] `invoke_model` → `converse` API に移行
-- [ ] `import json` の削除
-- [ ] レスポンスパース処理の更新
+- [x] `invoke_model` → `converse` API に移行
+- [x] `import json` の削除
+- [x] レスポンスパース処理の更新
 
 ### Step 4: テストの更新
 
-- [ ] OpenAI パラメータテストの更新
-- [ ] Bedrock Converse API テストの更新
-- [ ] 全テスト通過
+- [x] OpenAI パラメータテストの更新
+- [x] Bedrock Converse API テストの更新
+- [x] 全テスト通過（133件）
 
 ### Step 5: spec.md の更新
 
-- [ ] LLM プロバイダー仕様の記述を更新
+- [x] LLM プロバイダー仕様の記述を更新
 
 ### Step 6: CHANGELOG の更新
 
-- [ ] `CHANGELOG.md` に `[0.4.2]` セクション追加
-- [ ] `CHANGELOG_ja.md` に `[0.4.2]` セクション追加
+- [x] `CHANGELOG.md` に `[0.4.2]` セクション追加
+- [x] `CHANGELOG_ja.md` に `[0.4.2]` セクション追加
 
 ### Step 7: versions/README.md の更新
 
-- [ ] バージョン比較表に v0.4.2 列追加
-- [ ] ディレクトリ構成に v0.4.1 追加
+- [x] バージョン比較表に v0.4.2 列追加
+- [x] ディレクトリ構成に v0.4.1 追加
 
 ### Step 8: README.md / SECURITY.md の更新
 
-- [ ] `README.md` の Directory Structure に `v0.4.1/` 追加
-- [ ] `README_ja.md` の Directory Structure に `v0.4.1/` 追加
-- [ ] `SECURITY.md` の Supported Versions を `0.4.2` に更新
-- [ ] `SECURITY_ja.md` の Supported Versions を `0.4.2` に更新
+- [x] `README.md` の Directory Structure に `v0.4.1/` 追加
+- [x] `README_ja.md` の Directory Structure に `v0.4.1/` 追加
+- [x] `SECURITY.md` の Supported Versions を `0.4.2` に更新
+- [x] `SECURITY_ja.md` の Supported Versions を `0.4.2` に更新
 
 ### 最終確認
 
-- [ ] 既存テストが全て通過（後方互換性維持）
-- [ ] `spec.md` の更新内容が実装と整合している
-- [ ] CHANGELOG の英語・日本語が整合している
-- [ ] バージョン番号がすべてのファイルで `0.4.2` に統一されている
+- [x] 既存テストが全て通過（後方互換性維持、全 133 件パス）
+- [x] `spec.md` の更新内容が実装と整合している
+- [x] CHANGELOG の英語・日本語が整合している
+- [x] バージョン番号がすべてのファイルで `0.4.2` に統一されている
