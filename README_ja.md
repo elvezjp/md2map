@@ -96,6 +96,29 @@ uv run md2map build document.md --split-mode nlp
 uv run md2map build document.md --split-mode nlp --split-threshold 300
 ```
 
+### 認証設定（AIモード）
+
+AIモードでは、使用するプロバイダーの認証情報が必要です。環境変数または `.env` ファイルで設定してください。
+
+| プロバイダー | 必要な環境変数 | デフォルトモデル |
+|-------------|---------------|-----------------|
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-haiku-4-5-20251001` |
+| Bedrock | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`（または IAM ロール） | `global.anthropic.claude-haiku-4-5-20251001-v1:0` |
+
+`MD2MAP_AI_MODEL` 環境変数で、どのプロバイダーでもデフォルトモデルを上書きできます。
+
+#### `.env` ファイルの使用
+
+テンプレートをコピーして認証情報を設定してください：
+
+```bash
+cp .env.example .env
+# .env を編集して認証情報を設定
+```
+
+シェルで設定された環境変数は `.env` の値より優先されます。
+
 ### AIモードで分割
 
 ```bash
