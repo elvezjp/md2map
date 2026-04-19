@@ -148,12 +148,23 @@ md2map --help
 
 ## 7. 本 PR でスコープ外とする残タスク
 
+- **`add-line-numbers` の PyPI 公開（先行タスク）**
+  - `md2map` が依存するため、必ず `md2map` より先に公開する必要がある
 - PyPI の Trusted Publisher 登録（PyPI 側 GUI 作業）
 - TestPyPI での動作確認（管理者手動実行）
 - 本番 PyPI への初回公開
-- `add-line-numbers` をそれ自体 PyPI パッケージとして別途公開する案
-  （本 PR では同梱方式を採用したため保留）
 - 旧バージョン（`versions/` 配下）の取り扱いルールの整理
+
+### ⚠️ 公開順序の注意
+
+`md2map` は `add-line-numbers` に依存している。
+PyPI 公開は必ず以下の順序で行うこと。
+
+1. `add-line-numbers` を PyPI（本番）に公開
+2. `md2map` を TestPyPI → 本番 PyPI に公開
+
+この順序を守らないと、`pip install md2map` したユーザが
+`add-line-numbers` を PyPI 上で解決できず失敗する。
 
 ## 8. 実装記録
 
@@ -173,3 +184,49 @@ md2map --help
 - `uv sync --all-extras` が成功（`add-line-numbers` の git 依存解消を確認）
 - `uv run pytest` が全件パス
 - `uv build` で sdist/wheel が生成され、`versions/` / `add-line-numbers/` が同梱されないこと
+
+### 8.3 方針変更: `add-line-numbers` の扱いを Git 依存に差し戻し
+
+2026-04-19 追記。`add-line-numbers` 側も PyPI 公開準備を進めているため、
+**同梱化を取りやめ、元の Git 依存構成に戻した**。
+
+#### 戻した理由と仕組み
+
+- `[tool.uv.sources]` は **uv のローカル開発時のみ有効な上書き**であり、
+  `uv build` が生成する sdist / wheel の METADATA には含まれない。
+- したがって PyPI 公開時の依存解決は `[project.dependencies]` の
+  `add-line-numbers` という**名前**に従い、PyPI 側の
+  `add-line-numbers` パッケージが使われる。
+- この方式なら、`add-line-numbers` が PyPI 公開された後は
+  **`md2map` 側の pyproject.toml を差し替える必要はほぼ無い**
+  （任意で `[tool.uv.sources]` を削除し、`add-line-numbers>=X.Y` の
+  バージョン下限を付ける程度で良い）。
+
+#### 差し戻した変更
+
+- `md2map/parsers/markdown_parser.py` の import を
+  `from add_line_numbers import add_line_numbers_to_content` に戻した
+- `md2map/utils/line_numbers.py` を削除
+- `pyproject.toml` に `dependencies = ["add-line-numbers"]` と
+  `[tool.uv.sources]`（`elvezjp/add-line-numbers` の main ブランチ参照）を復活
+- `uv.lock` を再生成
+
+#### 公開順序の注意（重要）
+
+> **⚠️ `md2map` の PyPI 公開は、`add-line-numbers` の PyPI 公開が完了してから
+> 行うこと。**
+>
+> 先に `md2map` を公開すると、エンドユーザの `pip install md2map` が
+> `add-line-numbers` を PyPI で解決できずに失敗する。
+>
+> 推奨手順:
+> 1. `add-line-numbers` を PyPI（または TestPyPI）に公開
+> 2. `md2map` の `pyproject.toml` から `[tool.uv.sources]` を削除
+>    （ローカル dev でも PyPI 版を使うなら）し、
+>    `add-line-numbers>=X.Y` の下限ピンを設定（任意）
+> 3. `md2map` を TestPyPI → 本番 PyPI の順で公開
+
+#### 再確認した動作
+
+- `uv sync --all-extras` が成功（git ソース経由で `add-line-numbers==0.1.1` を解決）
+- `uv run pytest` が 136 件 pass
