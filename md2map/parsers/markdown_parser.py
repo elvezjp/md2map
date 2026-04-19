@@ -876,10 +876,10 @@ class MarkdownParser(BaseParser):
     def _add_line_numbers(self, content: str) -> str:
         """テキストに 1 始まりの行番号を付与する
 
-        add-line-numbers パッケージを使用する。行番号は常に 1〜N（相対番号）。
+        同梱の line_numbers ユーティリティを使用する。行番号は常に 1〜N（相対番号）。
         AI はこの相対番号で分割点を返し、呼び出し元で元ファイルの行番号に変換する。
         """
-        from add_line_numbers import add_line_numbers_to_content
+        from md2map.utils.line_numbers import add_line_numbers_to_content
 
         numbered_text, _ = add_line_numbers_to_content(content)
         return numbered_text
