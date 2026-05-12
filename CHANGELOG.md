@@ -7,6 +7,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-05-12
+
+Raised minimum supported Python version to 3.11 to resolve a `python-dotenv` vulnerability ([CVE-2026-28684](https://nvd.nist.gov/vuln/detail/CVE-2026-28684) / [GHSA-mf9w-mj56-hr94](https://github.com/theskumar/python-dotenv/security/advisories/GHSA-mf9w-mj56-hr94), CVSS 6.6 Medium). The fix in `python-dotenv 1.2.2` requires Python 3.10+, and we are aligning with other Elvez repositories on Python 3.11 as the minimum.
+
+### Security
+
+- **python-dotenv vulnerability fix**: All resolved versions of `python-dotenv` in `uv.lock` are now `>= 1.2.2`, which fixes a symlink-following file overwrite issue in `set_key()` / `unset_key()` (CWE-59 / CWE-61)
+  - Resolves Dependabot alert #1
+
+### Changed
+
+- **Minimum Python version**: Raised from 3.9 to 3.11
+  - `pyproject.toml`: `requires-python = ">=3.11"`, classifiers updated, `[tool.ruff]` `target-version = "py311"`, `[tool.mypy]` `python_version = "3.11"`
+  - CI matrix updated from `["3.9", "3.13"]` to `["3.11", "3.13"]`
+  - README / CONTRIBUTING (EN/JA) updated to reflect the new requirement
+
 ## [0.4.2] - 2026-03-28
 
 Updated OpenAI and Bedrock LLM provider API calls to latest specifications. OpenAI now uses `max_completion_tokens` parameter (required for gpt-5.2+). Bedrock migrated from `invoke_model` to Converse API for multi-model support.

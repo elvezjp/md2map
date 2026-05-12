@@ -5,7 +5,7 @@
 [![Elvez](https://img.shields.io/badge/Elvez-Product-3F61A7?style=flat-square)](https://elvez.co.jp/)
 [![IXV Ecosystem](https://img.shields.io/badge/IXV-Ecosystem-3F61A7?style=flat-square)](https://elvez.co.jp/ixv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Stars](https://img.shields.io/github/stars/elvezjp/md2map?style=social)](https://github.com/elvezjp/md2map/stargazers)
 
 A CLI tool that transforms large markdown documents into "semantic maps (index + document parts)" for AI analysis and review.
@@ -47,7 +47,7 @@ IXV tackles the challenges of understanding, structuring, and utilizing Japanese
 
 ### Requirements
 
-- Python 3.9 or higher
+- Python 3.11 or higher
 - [uv](https://docs.astral.sh/uv/) (recommended package manager)
 
 ### Installation
@@ -296,6 +296,7 @@ md2map/
 │   ├── v0.3.2/            # v0.3.2 snapshot
 │   ├── v0.4.0/            # v0.4.0 snapshot
 │   ├── v0.4.1/            # v0.4.1 snapshot
+│   ├── v0.4.2/            # v0.4.2 snapshot
 │   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history (English)
 ├── CHANGELOG_ja.md        # Version history (Japanese)

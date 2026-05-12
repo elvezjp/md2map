@@ -195,7 +195,7 @@ Create a Pull Request on GitHub and include:
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.11 or higher
 - [uv](https://docs.astral.sh/uv/) (recommended package manager)
 - Git
 
