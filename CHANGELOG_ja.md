@@ -23,6 +23,24 @@
   - CI マトリクスを `["3.9", "3.13"]` から `["3.11", "3.13"]` に変更
   - README / CONTRIBUTING（日英）の必要条件記述を更新
 
+- **バージョン情報の一元化**: `md2map/__init__.py` の `__version__` を `importlib.metadata.version("md2map")` から動的に取得するよう変更（未インストール時は `"0.0.0"` にフォールバック）。`pyproject.toml` を単一の真実とし、従来の `0.1.0` と `0.4.x` の不整合を解消（refs #14）
+
+### 追加
+
+- **PyPI 公開向けメタデータの整備**（#14）: `pyproject.toml` を PyPI 配布可能な構成に
+  - `[project.urls]` を追加（Homepage / Repository / Issues / Changelog）
+  - classifiers を追加: `Operating System :: OS Independent`、`Topic :: Software Development :: Documentation`、`Topic :: Text Processing :: Markup :: Markdown`
+  - `[tool.hatch.build.targets.wheel]` で `packages = ["md2map"]` を明示
+  - `[tool.hatch.build.targets.sdist]` の `include` / `exclude` を整備し、`versions/`・`add-line-numbers/`・`docs/`・`tests/`・`main.py`・`spec.md`・`.env.example` を sdist/wheel から除外
+- **自動公開ワークフローの追加**（#14）: `.github/workflows/publish.yml` を新規作成（Trusted Publisher 経由）
+  - `release: published`（本番 PyPI）と `workflow_dispatch`（TestPyPI / PyPI 選択可）で発火
+  - `pypa/gh-action-pypi-publish@release/v1` を使用、`id-token: write` 権限
+- **PyPI 公開計画書**: `docs/20260419-pypi-publication-plan.md` を追加（公開方針と管理者向け作業チェックリスト）
+
+### 補足
+
+- `add-line-numbers` はローカル開発用に `[tool.uv.sources]` 経由の Git ソース依存のまま据え置き。`[tool.uv.sources]` は uv のローカル上書きで sdist/wheel の METADATA には含まれないため、公開後の `Requires-Dist: add-line-numbers` は PyPI 側から解決される。**したがって `md2map` の PyPI 公開は `add-line-numbers` を先に PyPI 公開してからでないと実行できない。** Issue #14（PyPI 公開準備）は実際の公開ステップを追跡するため OPEN のまま残す。
+
 ## [0.4.2] - 2026-03-28
 
 OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に更新。OpenAI は `max_completion_tokens` パラメータを使用するよう変更（gpt-5.2 以降で必須）。Bedrock は `invoke_model` から Converse API に移行し、マルチモデル対応を実現しました。
