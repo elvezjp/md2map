@@ -23,6 +23,24 @@ Raised minimum supported Python version to 3.11 to resolve a `python-dotenv` vul
   - CI matrix updated from `["3.9", "3.13"]` to `["3.11", "3.13"]`
   - README / CONTRIBUTING (EN/JA) updated to reflect the new requirement
 
+- **Version source unification**: `md2map/__init__.py` now reads `__version__` dynamically via `importlib.metadata.version("md2map")` (falls back to `"0.0.0"` when not installed). `pyproject.toml` becomes the single source of truth, resolving the previous `0.1.0` / `0.4.x` mismatch (refs #14)
+
+### Added
+
+- **PyPI publication metadata** (#14): Prepared `pyproject.toml` for PyPI distribution
+  - Added `[project.urls]` (Homepage / Repository / Issues / Changelog)
+  - Added classifiers: `Operating System :: OS Independent`, `Topic :: Software Development :: Documentation`, `Topic :: Text Processing :: Markup :: Markdown`
+  - Added `[tool.hatch.build.targets.wheel]` with `packages = ["md2map"]`
+  - Added `[tool.hatch.build.targets.sdist]` with explicit `include` / `exclude` lists so that `versions/`, `add-line-numbers/`, `docs/`, `tests/`, `main.py`, `spec.md`, and `.env.example` are not bundled in sdist/wheel
+- **Automated PyPI publish workflow** (#14): Added `.github/workflows/publish.yml` for Trusted Publisher-based publication
+  - Triggers on `release: published` (production PyPI) and `workflow_dispatch` (TestPyPI or PyPI, selectable)
+  - Uses `pypa/gh-action-pypi-publish@release/v1` with `id-token: write`
+- **PyPI publication plan**: Added `docs/20260419-pypi-publication-plan.md` recording the publication strategy and admin checklist
+
+### Notes
+
+- `add-line-numbers` remains a Git-sourced dependency via `[tool.uv.sources]` for local development. `[tool.uv.sources]` is a uv-local override and is **not** written to sdist/wheel METADATA; the published `Requires-Dist: add-line-numbers` resolves from PyPI. **Therefore `md2map` cannot be published to PyPI until `add-line-numbers` is published first.** Issue #14 (PyPI publication preparation) remains open to track the actual publish step.
+
 ## [0.4.2] - 2026-03-28
 
 Updated OpenAI and Bedrock LLM provider API calls to latest specifications. OpenAI now uses `max_completion_tokens` parameter (required for gpt-5.2+). Bedrock migrated from `invoke_model` to Converse API for multi-model support.
