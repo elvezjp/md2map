@@ -7,6 +7,22 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
+## [0.4.3] - 2026-05-12
+
+`python-dotenv` の脆弱性（[CVE-2026-28684](https://nvd.nist.gov/vuln/detail/CVE-2026-28684) / [GHSA-mf9w-mj56-hr94](https://github.com/theskumar/python-dotenv/security/advisories/GHSA-mf9w-mj56-hr94)、CVSS 6.6 Medium）を解消するため、最低サポート Python バージョンを 3.11 に引き上げました。`python-dotenv 1.2.2` の修正版が Python 3.10 以上を要件としているため、他の Elvez リポジトリと足並みを揃えて Python 3.11 を最低バージョンとしています。
+
+### セキュリティ
+
+- **python-dotenv 脆弱性対応**: `uv.lock` で解決される `python-dotenv` がすべて `>= 1.2.2` となり、`set_key()` / `unset_key()` のシンボリックリンク追従による任意ファイル上書き（CWE-59 / CWE-61）を修正
+  - Dependabot アラート #1 を解消
+
+### 変更
+
+- **Python 最低バージョン**: 3.9 → 3.11 に引き上げ
+  - `pyproject.toml`: `requires-python = ">=3.11"`、classifiers の更新、`[tool.ruff]` `target-version = "py311"`、`[tool.mypy]` `python_version = "3.11"`
+  - CI マトリクスを `["3.9", "3.13"]` から `["3.11", "3.13"]` に変更
+  - README / CONTRIBUTING（日英）の必要条件記述を更新
+
 ## [0.4.2] - 2026-03-28
 
 OpenAI・Bedrock の LLM プロバイダー API 呼び出しを最新仕様に更新。OpenAI は `max_completion_tokens` パラメータを使用するよう変更（gpt-5.2 以降で必須）。Bedrock は `invoke_model` から Converse API に移行し、マルチモデル対応を実現しました。

@@ -195,7 +195,7 @@ GitHub上でPull Requestを作成し、以下を含めてください：
 
 ### 前提条件
 
-- Python 3.9以上
+- Python 3.11以上
 - [uv](https://docs.astral.sh/uv/)（推奨パッケージマネージャー）
 - Git
 
