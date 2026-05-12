@@ -1,8 +1,8 @@
 # md2map PyPI 公開準備計画書
 
-- 作成日: 2026-04-19
+- 作成日: 2026-04-19（2026-05-12 に v0.4.3 ベースへ更新）
 - 対象 Issue: [#14 PyPI パッケージ公開の準備](https://github.com/elvezjp/md2map/issues/14)
-- 対象バージョン: `pyproject.toml` 記載の最新バージョン（現状 `0.4.2`）
+- 対象バージョン: `pyproject.toml` 記載の最新バージョン（現状 `0.4.3`）
 - 作業ブランチ: `claude/pypi-publication-setup-dEByB`
 
 ## 1. 目的
@@ -10,7 +10,7 @@
 `md2map` を PyPI に公開し、他の Python プロジェクトから
 `pip install md2map` で利用可能な状態にする。
 
-本計画書の対象は **最新バージョン（v0.4.2）のみ**。`versions/` 配下の旧
+本計画書の対象は **最新バージョン（v0.4.3）のみ**。`versions/` 配下の旧
 バージョンコードは対象外とする（sdist/wheel に含めない）。
 
 ## 2. 前提条件の確認
@@ -30,7 +30,7 @@
 | バージョン | `pyproject.toml` の `project.version` を単一の正とする |
 | 同梱モジュール | `md2map/` 以下のみ。`versions/`, `add-line-numbers/`, `tests/`, `docs/` は除外 |
 | エントリポイント | `md2map = "md2map.cli:main"`（CLI コマンド） |
-| Python 要件 | `>=3.9` |
+| Python 要件 | `>=3.11` |
 | 必須依存 | なし（`add-line-numbers` の Git 依存は解消する） |
 | optional 依存 | `nlp` / `ai` / `dev`（既存を維持） |
 | ライセンス | MIT（`LICENSE` を sdist・wheel に同梱） |
@@ -97,7 +97,7 @@
 ### 6.1 PR レビュー項目（コードベース）
 
 - [ ] `md2map/__init__.py` の `__version__` が `pyproject.toml` の
-      `0.4.2` と一致して表示されること
+      `0.4.3` と一致して表示されること
 - [ ] `md2map/utils/line_numbers.py` の `add_line_numbers_to_content`
       が元の `add-line-numbers` 実装と同一の出力をすること
 - [ ] `md2map/parsers/markdown_parser.py` が
@@ -117,24 +117,24 @@
 uv build
 
 # 2) 生成物確認
-ls dist/  # md2map-0.4.2-py3-none-any.whl, md2map-0.4.2.tar.gz
+ls dist/  # md2map-0.4.3-py3-none-any.whl, md2map-0.4.3.tar.gz
 
 # 3) sdist の中身に versions/, add-line-numbers/ が含まれていないこと
-tar -tzf dist/md2map-0.4.2.tar.gz | grep -E "versions/|add-line-numbers/" && echo NG || echo OK
+tar -tzf dist/md2map-0.4.3.tar.gz | grep -E "versions/|add-line-numbers/" && echo NG || echo OK
 
 # 4) wheel をクリーン環境で install
 python -m venv /tmp/md2map-venv
-/tmp/md2map-venv/bin/pip install dist/md2map-0.4.2-py3-none-any.whl
+/tmp/md2map-venv/bin/pip install dist/md2map-0.4.3-py3-none-any.whl
 /tmp/md2map-venv/bin/md2map --help
 /tmp/md2map-venv/bin/python -c "import md2map; print(md2map.__version__)"
-# => 0.4.2 と表示されること
+# => 0.4.3 と表示されること
 ```
 
 ### 6.3 TestPyPI 動作確認（管理者作業）
 
 ```bash
 # GitHub Actions の publish ワークフローを workflow_dispatch で実行
-# → TestPyPI に md2map 0.4.2 が公開されること
+# → TestPyPI に md2map 0.4.3 が公開されること
 
 pip install --index-url https://test.pypi.org/simple/ md2map
 md2map --help
