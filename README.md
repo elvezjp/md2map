@@ -21,9 +21,9 @@ A CLI tool that transforms large markdown documents into "semantic maps (index +
 
 ## Development Background
 
-This tool was born as a small utility during the development of **IXV (Ixiv)**, an AI development assistant focused on Japanese development documents and specifications.
+This tool was born as a small utility during the development of **IXV (Ixiv)**, an AI development ecosystem designed for Japanese engineering teams.
 
-IXV tackles the challenges of understanding, structuring, and utilizing Japanese documents in system development. This repository publishes a portion of that work as open source.
+IXV delivers a methodology and OSS that put AI to practical use in real development workflows. This repository publishes a portion of that work as open source.
 
 ## Features
 
