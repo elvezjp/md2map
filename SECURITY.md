@@ -98,7 +98,7 @@ This repository keeps snapshots of older versions under `versions/`, so Dependab
 | Target | Action |
 |--------|--------|
 | Latest version (repository root) | **Remediate** (update dependencies / open a PR) |
-| Older versions (`versions/`) | **Dismiss**. Close existing alerts in bulk; review impact and dismiss on new occurrences |
+| Older versions (`versions/`) | **Dismiss**. Review impact and close |
 
 A dismissed alert will not recur for the exact same combination of "manifest × package × CVE", but a new CVE published against the same package will trigger a new alert.
 
