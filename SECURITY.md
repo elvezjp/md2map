@@ -87,29 +87,18 @@ Add input path normalization and validation to ensure files are within allowed d
 - Dependencies are regularly scanned for vulnerabilities
 - Use `uv sync` to get the latest dependencies
 
-## Dependabot Alert Policy
+### Dependabot Alert Policy
 
 This repository keeps snapshots of older versions under `versions/`, so Dependabot alerts may also fire against those archived lockfiles. Given this, we operate Dependabot alerts according to the following policy.
 
-### Malware tab
+**Malware tab**: Always remediate, regardless of where the alert originates.
 
-- **Always remediate, regardless of where the alert originates**
-- Malware is never left unaddressed, even under archived versions
-
-### Vulnerable tab
+**Vulnerable**: Follow the table below.
 
 | Target | Action |
 |--------|--------|
 | Latest version (repository root) | **Remediate** (update dependencies / open a PR) |
-| Older versions (`versions/`) | **Dismiss**. Close existing alerts in bulk; review impact and dismiss on new occurrences |
-
-### Workflow
-
-1. When a new alert appears, check whether it's on the **Malware** tab or the **Vulnerable** tab
-2. **Malware** → remediate, regardless of location
-3. **Vulnerable** → check where it originates
-   - Repository root → remediate
-   - Older versions (`versions/`) → confirm no impact and dismiss
+| Older versions (`versions/`) | **Dismiss**. Review impact and close |
 
 A dismissed alert will not recur for the exact same combination of "manifest × package × CVE", but a new CVE published against the same package will trigger a new alert.
 
