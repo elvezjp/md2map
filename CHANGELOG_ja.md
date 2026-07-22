@@ -70,7 +70,7 @@
 
 ### 補足
 
-- `add-line-numbers` はローカル開発用に `[tool.uv.sources]` 経由の Git ソース依存のまま据え置き。`[tool.uv.sources]` は uv のローカル上書きで sdist/wheel の METADATA には含まれないため、公開後の `Requires-Dist: add-line-numbers` は PyPI 側から解決される。**したがって `md2map` の PyPI 公開は `add-line-numbers` を先に PyPI 公開してからでないと実行できない。** Issue #14（PyPI 公開準備）は実際の公開ステップを追跡するため OPEN のまま残す。
+- `add-line-numbers` は実行時依存として明示し、このリポジトリで作業する場合は `[tool.uv.sources]` 経由で公開リポジトリから取得する。
 
 ## [0.4.2] - 2026-03-28
 

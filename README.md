@@ -311,7 +311,7 @@ For details, see [spec.md](spec.md).
 
 ## Related Projects
 
-- [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - Line number tool used in AI mode (installed from git automatically)
+- [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - Line number tool used in AI mode (resolved from the public repository via `pyproject.toml`)
 - [code2map](https://github.com/elvezjp/code2map) - Similar tool for source code analysis
 
 > **Note**: If you need the add-line-numbers sources for reference, clone the upstream repository directly (`git clone https://github.com/elvezjp/add-line-numbers.git`). This repository was previously embedded as a git subtree under `add-line-numbers/`; that layout is preserved in the `v0.4.3` tag.

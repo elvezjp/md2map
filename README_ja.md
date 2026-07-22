@@ -16,7 +16,7 @@
 
 - **AIドキュメントレビュー**: 大規模なマークダウンファイルをAIが理解しやすい意味単位に分割し、レビュー精度を向上
 - **ドキュメント構造の可視化**: 見出し階層とセクション要約を索引として出力
-- **行番号マッピング**: AIの指摘箱所を元ファイルの行番号に確実に対応付け
+- **行番号マッピング**: AIの指摘箇所を元ファイルの行番号に確実に対応付け
 - **ドキュメント管理**: 大規模な仕様書を管理しやすいパーツに分割して管理
 
 ## 開発の背景
@@ -311,7 +311,7 @@ md2map/
 
 ## 関連プロジェクト
 
-- [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - AIモードで使用する行番号付与ツール（gitから自動インストール）
+- [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - AIモードで使用する行番号付与ツール（`pyproject.toml` の設定により公開リポジトリから取得）
 - [code2map](https://github.com/elvezjp/code2map) - ソースコード解析向けの類似ツール
 
 > **Note**: add-line-numbers のソースを参照したい場合は、上流リポジトリを直接 clone してください（`git clone https://github.com/elvezjp/add-line-numbers.git`）。このリポジトリは以前 git subtree として `add-line-numbers/` ディレクトリに取り込まれており、その構成は `v0.4.3` タグに保存されています。

@@ -25,10 +25,8 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-# NOTE: `[tool.uv.sources]` は uv のローカル開発時のみ有効で、
-# `uv build` が生成する sdist / wheel の METADATA には含まれない。
-# PyPI 公開時の依存解決は `[project.dependencies]` の名前に従うため、
-# `add-line-numbers` が PyPI に公開された後にしか `md2map` は公開できない。
+# NOTE: このリポジトリで uv を使う場合、`add-line-numbers` は公開リポジトリから取得する。
+# `[project.dependencies]` 側にも残し、実行時依存として明示する。
 add-line-numbers = { git = "https://github.com/elvezjp/add-line-numbers.git", branch = "main" }
 
 [project.urls]

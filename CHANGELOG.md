@@ -70,7 +70,7 @@ Raised minimum supported Python version to 3.11 to resolve a `python-dotenv` vul
 
 ### Notes
 
-- `add-line-numbers` remains a Git-sourced dependency via `[tool.uv.sources]` for local development. `[tool.uv.sources]` is a uv-local override and is **not** written to sdist/wheel METADATA; the published `Requires-Dist: add-line-numbers` resolves from PyPI. **Therefore `md2map` cannot be published to PyPI until `add-line-numbers` is published first.** Issue #14 (PyPI publication preparation) remains open to track the actual publish step.
+- `add-line-numbers` remains an explicit runtime dependency and is resolved from the public repository via `[tool.uv.sources]` when working with this repository.
 
 ## [0.4.2] - 2026-03-28
 
