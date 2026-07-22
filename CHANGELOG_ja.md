@@ -7,7 +7,7 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
-## [0.5.0] - Unreleased
+## [0.5.0] - 2026-07-22
 
 ### 追加
 
@@ -363,6 +363,8 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 
 | バージョン | 主な内容 |
 | ---------- | -------- |
+| 0.5.0 | OpenAI 互換 API・reasoning_effort 対応、セクション単位 AI 呼び出しの並列実行、バージョン管理を git tag へ移行 |
+| 0.4.3 | 最低 Python を 3.11 に引き上げ（python-dotenv 修正）、PyPI 公開メタデータ整備 |
 | 0.4.2 | OpenAI／Bedrock の API 呼び出し更新、`.env` 読み込み、認証まわりのドキュメント |
 | 0.4.1 | LLM 失敗を `parse()` の `warnings` に反映、サブスプリットが `section_overrides` を継承 |
 | 0.4.0 | ルールベース要約の調整、セクション単位の AI 要約モード |
@@ -379,6 +381,8 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 - [リポジトリ](https://github.com/elvezjp/md2map)
 - [Issueトラッカー](https://github.com/elvezjp/md2map/issues)
 
+[0.5.0]: https://github.com/elvezjp/md2map/compare/v0.4.3...v0.5.0
+[0.4.3]: https://github.com/elvezjp/md2map/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/elvezjp/md2map/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/elvezjp/md2map/compare/v0.3.2...v0.4.0
