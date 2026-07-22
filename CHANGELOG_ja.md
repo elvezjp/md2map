@@ -15,6 +15,15 @@
   - `OpenAIProvider` が `base_url` 指定時にその URL へ接続（未指定時は従来どおり OpenAI 公式 API）
   - OpenAI 互換 API には `max_completion_tokens` 未対応のものがあるため、`base_url` 指定時は従来の `max_tokens` パラメータで API を呼び出す
   - `build_llm_config_from_env` が環境変数 `OPENAI_BASE_URL` を読み取り、CLI からも互換 API を利用可能に
+- **セクション単位の AI 呼び出しの並列実行**（#34）: AI 要約・AI 分割のセクション単位 LLM 呼び出しをスレッドプールで並列実行可能に
+  - `MarkdownParser` に `ai_concurrency` 引数、CLI に `--ai-concurrency` オプションを追加（デフォルト `1` = 従来どおり逐次実行）
+  - 出力（セクション・要約・警告の順序）は逐次実行時と一致することを保証
+  - 一部セクションの失敗は該当セクションの警告として記録され、他セクションの処理には影響しない
+  - LLM プロバイダーの遅延初期化をスレッドセーフ化
+
+### 修正
+
+- **注入した `llm_provider` が `summary_mode="ai"` 単独では使用されない問題を修正**: 従来は `split_mode="ai"` の場合のみ注入プロバイダーを使用し、AI 要約のみの場合は環境変数フォールバックが使われていた
 
 ### 変更
 

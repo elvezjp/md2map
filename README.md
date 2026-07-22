@@ -194,6 +194,7 @@ uv run md2map build document.md --dry-run
 | `--section-overrides <JSON>` | None | Per-section split settings override (JSON file path or JSON string) |
 | `--summary-max-chars <N>` | `100` | Maximum character count for rule-based summary |
 | `--summary-mode <MODE>` | `text` | Summary generation mode (`text`: rule-based / `ai`: LLM summary) |
+| `--ai-concurrency <N>` | `1` | Concurrency for per-section AI calls (summary / AI split) (`1`: sequential) |
 | `--verbose` | false | Output detailed logs |
 | `--dry-run` | false | Preview only, no file generation |
 

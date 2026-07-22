@@ -699,3 +699,225 @@ class TestAIPromptCustomization:
         prompt = parser._build_ai_system_prompt()
         assert "title" not in prompt
         assert "タイトル" not in prompt
+
+
+# ---------------------------------------------------------------------------
+# AI 呼び出し並列実行テスト（Issue #34）
+# ---------------------------------------------------------------------------
+
+
+class ThreadSafeMockProvider(BaseLLMProvider):
+    """並列実行テスト用の LLM プロバイダー
+
+    respond(system_prompt, user_message) の結果を返す。例外送出も可能。
+    """
+
+    def __init__(self, respond):
+        import threading
+
+        self.respond = respond
+        self.calls: list[tuple[str, str]] = []
+        self._lock = threading.Lock()
+
+    def send_message(self, system_prompt: str, user_message: str) -> str:
+        with self._lock:
+            self.calls.append((system_prompt, user_message))
+        return self.respond(system_prompt, user_message)
+
+
+def _write_temp_md(content: str) -> str:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(content)
+        return f.name
+
+
+def _multi_section_content(num_sections: int = 4) -> str:
+    """複数セクションのテスト用マークダウンを生成する"""
+    content = ""
+    for i in range(num_sections):
+        content += f"# Section{i + 1}\n\n"
+        content += "内容のテキストです。" * 20 + "\n\n"
+    return content
+
+
+class TestAIConcurrency:
+    """ai_concurrency 設定のテスト"""
+
+    def test_default_is_sequential(self):
+        """デフォルトは 1（逐次実行）"""
+        parser = MarkdownParser()
+        assert parser.ai_concurrency == 1
+
+    def test_concurrency_clamped_to_one(self):
+        """0 以下は 1 に丸められる"""
+        parser = MarkdownParser(ai_concurrency=0)
+        assert parser.ai_concurrency == 1
+        parser = MarkdownParser(ai_concurrency=-5)
+        assert parser.ai_concurrency == 1
+
+    def test_concurrency_stored(self):
+        parser = MarkdownParser(ai_concurrency=4)
+        assert parser.ai_concurrency == 4
+
+
+class TestParallelAISummary:
+    """AI要約の並列実行テスト"""
+
+    def _run_parse(self, concurrency: int, respond):
+        provider = ThreadSafeMockProvider(respond)
+        temp_path = _write_temp_md(_multi_section_content(4))
+        try:
+            parser = MarkdownParser(
+                summary_mode="ai",
+                llm_provider=provider,
+                ai_concurrency=concurrency,
+            )
+            sections, warnings = parser.parse(temp_path)
+            return sections, warnings, provider
+        finally:
+            os.unlink(temp_path)
+
+    def test_parallel_summaries_match_sequential(self):
+        """並列実行の要約・警告が逐次実行と一致する"""
+
+        def respond(system, user):
+            # セクション名をエコーして呼び出しを区別可能にする
+            for i in range(1, 5):
+                if f"Section{i}" in user:
+                    return f"要約{i}"
+            return "要約"
+
+        seq_sections, seq_warnings, _ = self._run_parse(1, respond)
+        par_sections, par_warnings, par_provider = self._run_parse(4, respond)
+
+        assert [s.summary for s in par_sections] == [
+            s.summary for s in seq_sections
+        ]
+        assert par_warnings == seq_warnings
+        assert len(par_provider.calls) == 4
+
+    def test_partial_failure_does_not_affect_others(self):
+        """一部セクションの失敗が他セクションに影響しない"""
+
+        def respond(system, user):
+            if "Section2" in user:
+                raise RuntimeError("simulated failure")
+            return "要約OK"
+
+        sections, warnings, _ = self._run_parse(4, respond)
+
+        summaries = [s.summary for s in sections]
+        assert summaries[0] == "要約OK"
+        assert summaries[1] is None  # 失敗したセクション
+        assert summaries[2] == "要約OK"
+        assert summaries[3] == "要約OK"
+        assert len(warnings) == 1
+        assert "Section2" in warnings[0]
+
+    def test_warnings_preserve_section_order(self):
+        """並列実行でも警告がセクション順に並ぶ"""
+        import time
+
+        def respond(system, user):
+            # 逆順で完了するように遅延を入れる
+            if "Section1" in user:
+                time.sleep(0.05)
+                raise RuntimeError("fail-1")
+            if "Section3" in user:
+                raise RuntimeError("fail-3")
+            return "要約OK"
+
+        sections, warnings, _ = self._run_parse(4, respond)
+
+        assert len(warnings) == 2
+        assert "Section1" in warnings[0]
+        assert "Section3" in warnings[1]
+
+    def test_text_mode_not_parallelized(self):
+        """summary_mode=text では LLM 呼び出しなし（並列化パスに入らない）"""
+        provider = ThreadSafeMockProvider(lambda s, u: "unused")
+        temp_path = _write_temp_md(_multi_section_content(3))
+        try:
+            parser = MarkdownParser(
+                summary_mode="text",
+                llm_provider=provider,
+                ai_concurrency=4,
+            )
+            sections, warnings = parser.parse(temp_path)
+            assert len(provider.calls) == 0
+            assert all(s.summary for s in sections)
+        finally:
+            os.unlink(temp_path)
+
+
+class TestParallelAISplit:
+    """AI分割の並列実行テスト"""
+
+    def _two_section_content(self) -> str:
+        """同一行数の 2 セクション（own content 9 行ずつ）を生成する"""
+        section = "".join(
+            "Paragraph " + str(i + 1) + " content. " * 50 + "\n\n"
+            for i in range(4)
+        )
+        return f"# First\n\n{section}# Second\n\n{section}"
+
+    def _run_split(self, concurrency: int, respond):
+        provider = ThreadSafeMockProvider(respond)
+        temp_path = _write_temp_md(self._two_section_content())
+        try:
+            parser = MarkdownParser(
+                split_mode="ai",
+                split_threshold=50,
+                llm_provider=provider,
+                ai_concurrency=concurrency,
+            )
+            sections, warnings = parser.parse(temp_path)
+            return sections, warnings, provider
+        finally:
+            os.unlink(temp_path)
+
+    def test_parallel_split_matches_sequential(self):
+        """並列実行の分割結果が逐次実行と一致する"""
+        ai_response = json.dumps([
+            {"start_line": 1, "end_line": 5},
+            {"start_line": 6, "end_line": 9},
+        ])
+
+        seq_sections, seq_warnings, _ = self._run_split(1, lambda s, u: ai_response)
+        par_sections, par_warnings, par_provider = self._run_split(
+            4, lambda s, u: ai_response
+        )
+
+        assert len(par_provider.calls) == 2
+
+        def describe(sections):
+            return [
+                (s.title, s.is_subsplit, s.subsplit_title, s.start_line, s.end_line)
+                for s in sections
+            ]
+
+        assert describe(par_sections) == describe(seq_sections)
+        assert par_warnings == seq_warnings
+
+        # 各親セクションに 2 つずつ仮想セクションが生成される
+        virtual = [s for s in par_sections if s.is_subsplit]
+        assert len(virtual) == 4
+
+    def test_parallel_split_failure_falls_back(self):
+        """並列実行でも AI 呼び出し失敗時は閾値ベースにフォールバックする"""
+
+        def respond(system, user):
+            raise RuntimeError("simulated API failure")
+
+        sections, warnings, _ = self._run_split(4, respond)
+
+        # フォールバックで仮想セクションが生成される
+        virtual = [s for s in sections if s.is_subsplit]
+        assert len(virtual) >= 2
+        for vs in virtual:
+            assert "ai threshold split" in vs.note
+        # 失敗ごとに警告が記録される
+        assert len(warnings) == 2
+        assert all("AI API call failed" in w for w in warnings)

@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `OpenAIProvider` connects to the specified URL when `base_url` is set (defaults to the official OpenAI API when unset)
   - Since some OpenAI-compatible APIs do not support `max_completion_tokens`, the provider falls back to the legacy `max_tokens` parameter when `base_url` is set
   - `build_llm_config_from_env` now reads the `OPENAI_BASE_URL` environment variable, making compatible APIs available from the CLI as well
+- **Concurrent per-section AI calls** (#34): Per-section LLM calls for AI summaries and AI splits can now run in parallel via a thread pool
+  - Added an `ai_concurrency` argument to `MarkdownParser` and an `--ai-concurrency` CLI option (default `1` = sequential, same as before)
+  - Output (order of sections, summaries, and warnings) is guaranteed to match sequential execution
+  - A failure in one section is recorded as a warning for that section and does not affect the processing of other sections
+  - Made the lazy initialization of the LLM provider thread-safe
+
+### Fixed
+
+- **Fixed injected `llm_provider` being ignored when only `summary_mode="ai"` is set**: previously the injected provider was used only with `split_mode="ai"`, and AI-summary-only runs fell back to environment-variable configuration
 
 ### Changed
 
