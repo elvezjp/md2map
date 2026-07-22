@@ -726,7 +726,9 @@ class ThreadSafeMockProvider(BaseLLMProvider):
 
 
 def _write_temp_md(content: str) -> str:
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".md", delete=False, encoding="utf-8"
+    ) as f:
         f.write(content)
         return f.name
 
