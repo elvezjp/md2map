@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - Unreleased
+## [0.5.0] - 2026-07-22
 
 ### Added
 
@@ -363,6 +363,8 @@ This version has the following limitations:
 
 | Version | Highlights |
 | ------- | ---------- |
+| 0.5.0 | OpenAI-compatible API & reasoning-effort support; concurrent per-section AI calls; version management via git tags |
+| 0.4.3 | Minimum Python raised to 3.11 (python-dotenv fix); PyPI publication metadata |
 | 0.4.2 | OpenAI/Bedrock client APIs updated; `.env` loading; authentication docs |
 | 0.4.1 | LLM failures surfaced in `parse()` warnings; subsplit inherits `section_overrides` |
 | 0.4.0 | Configurable rule-based summaries; per-section AI summary mode |
@@ -379,6 +381,8 @@ For frozen source trees per release, see the corresponding git tag ([Tags](https
 - [Repository](https://github.com/elvezjp/md2map)
 - [Issue Tracker](https://github.com/elvezjp/md2map/issues)
 
+[0.5.0]: https://github.com/elvezjp/md2map/compare/v0.4.3...v0.5.0
+[0.4.3]: https://github.com/elvezjp/md2map/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/elvezjp/md2map/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/elvezjp/md2map/compare/v0.3.2...v0.4.0
