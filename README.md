@@ -288,16 +288,6 @@ md2map/
 │   └── fixtures/          # Test fixtures
 ├── docs/                  # Documentation
 │   └── examples/          # Output examples per version
-├── versions/              # Old version snapshots
-│   ├── v0.1.0/            # v0.1.0 snapshot
-│   ├── v0.2.0/            # v0.2.0 snapshot
-│   ├── v0.3.0/            # v0.3.0 snapshot
-│   ├── v0.3.1/            # v0.3.1 snapshot
-│   ├── v0.3.2/            # v0.3.2 snapshot
-│   ├── v0.4.0/            # v0.4.0 snapshot
-│   ├── v0.4.1/            # v0.4.1 snapshot
-│   ├── v0.4.2/            # v0.4.2 snapshot
-│   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history (English)
 ├── CHANGELOG_ja.md        # Version history (Japanese)
 ├── CONTRIBUTING.md        # Contribution guidelines (English)
@@ -328,6 +318,24 @@ For details, see [spec.md](spec.md).
 > [tool.uv.sources]
 > add-line-numbers = { path = "add-line-numbers", editable = true }
 > ```
+
+## Version Management
+
+Only the latest code is kept at the repository root. Versions are managed with git tags.
+
+- The `main` branch accumulates changes for the next version under a `## [X.Y.Z] - Unreleased` heading in [CHANGELOG.md](CHANGELOG.md)
+- On release, the heading date is finalized, the version in `pyproject.toml` is confirmed, and a `vX.Y.Z` tag is created
+
+### Using Old Versions
+
+Old versions (v0.1.0–v0.4.2) were previously kept as snapshots under a `versions/` directory. That layout is preserved in the `v0.4.3` tag:
+
+```bash
+git checkout v0.4.3
+# Old versions are under versions/
+```
+
+**Note**: The `v0.4.3` tag serves as the archive reference point for the old layout. Do not delete or move it.
 
 ## Security
 

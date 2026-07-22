@@ -7,6 +7,16 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
+## [0.5.0] - Unreleased
+
+### 変更
+
+- **バージョン管理を git tag へ移行**（#29）: 旧バージョンのスナップショットを保持していた `versions/` ディレクトリを削除し、リポジトリのルートで最新コードのみを管理する方針に変更
+  - 旧バージョン（v0.1.0〜v0.4.2）のスナップショットは `v0.4.3` タグの `versions/` 配下に保存されています
+  - `versions/` 配下の lockfile に起因していた Dependabot アラートの重複通知を解消
+  - README（日英）に「バージョン管理」セクションを追加し、SECURITY（日英）の Dependabot アラート運用方針を更新
+  - `pyproject.toml` の sdist 除外リストから `/versions` を削除
+
 ## [0.4.3] - 2026-05-12
 
 `python-dotenv` の脆弱性（[CVE-2026-28684](https://nvd.nist.gov/vuln/detail/CVE-2026-28684) / [GHSA-mf9w-mj56-hr94](https://github.com/theskumar/python-dotenv/security/advisories/GHSA-mf9w-mj56-hr94)、CVSS 6.6 Medium）を解消するため、最低サポート Python バージョンを 3.11 に引き上げました。`python-dotenv 1.2.2` の修正版が Python 3.10 以上を要件としているため、他の Elvez リポジトリと足並みを揃えて Python 3.11 を最低バージョンとしています。
@@ -341,7 +351,7 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 | 0.2.0 | NLP／AI 分割モード、マルチ LLM プロバイダー（OpenAI／Anthropic／Bedrock） |
 | 0.1.0 | 初回リリース（見出し分割、INDEX.md、parts/、MAP.json） |
 
-リリースごとのソーススナップショットは [versions/README.md](versions/README.md) を参照してください。
+リリースごとのソースは対応する git tag（[Tags](https://github.com/elvezjp/md2map/tags)）を参照してください。v0.4.2 以前のスナップショットは `v0.4.3` タグの `versions/` 配下に保存されています。
 
 ## リンク
 
