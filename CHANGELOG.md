@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `OpenAIProvider` connects to the specified URL when `base_url` is set (defaults to the official OpenAI API when unset)
   - Since some OpenAI-compatible APIs do not support `max_completion_tokens`, the provider falls back to the legacy `max_tokens` parameter when `base_url` is set
   - `build_llm_config_from_env` now reads the `OPENAI_BASE_URL` environment variable, making compatible APIs available from the CLI as well
+- **Reasoning effort support for reasoning models**: Added a `reasoning_effort` field to `LLMConfig`
+  - `OpenAIProvider` sends `reasoning_effort` to the API only when specified (when unset, the parameter is not sent and the model's default thinking effort applies, same as before)
+  - Allowed values are model-dependent, so they are passed through to the API without validation (e.g. Kimi K3 accepts low/high/max)
+  - Added an `--ai-reasoning-effort` CLI option, with fallback to the `MD2MAP_REASONING_EFFORT` environment variable
 - **Concurrent per-section AI calls** (#34): Per-section LLM calls for AI summaries and AI splits can now run in parallel via a thread pool
   - Added an `ai_concurrency` argument to `MarkdownParser` and an `--ai-concurrency` CLI option (default `1` = sequential, same as before)
   - Output (order of sections, summaries, and warnings) is guaranteed to match sequential execution

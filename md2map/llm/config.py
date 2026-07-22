@@ -13,6 +13,8 @@ class LLMConfig:
         model: モデルID
         api_key: API キー（Anthropic / OpenAI 用）
         base_url: OpenAI 互換 API（Moonshot AI 等）の接続先 URL（OpenAI 用、未指定時は公式 API）
+        reasoning_effort: 推論モデルの思考量（OpenAI 用、未指定時は送信しない。
+            設定可能な値はモデル依存のため検証せず API へパススルー）
         access_key_id: アクセスキーID（Bedrock 用）
         secret_access_key: シークレットアクセスキー（Bedrock 用）
         region: リージョン（Bedrock 用）
@@ -23,6 +25,7 @@ class LLMConfig:
     model: str
     api_key: Optional[str] = None
     base_url: Optional[str] = None
+    reasoning_effort: Optional[str] = None
     access_key_id: Optional[str] = None
     secret_access_key: Optional[str] = None
     region: Optional[str] = None

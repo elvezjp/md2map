@@ -118,6 +118,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=1,
         help="セクション単位の AI 呼び出し（要約・AI分割）の並列度（デフォルト: 1 = 逐次実行）",
     )
+    build_parser.add_argument(
+        "--ai-reasoning-effort",
+        default=None,
+        help="推論モデルの思考量（OpenAI 用、例: low / medium / high / max。"
+        "設定可能な値はモデル依存。未指定時は送信しない）",
+    )
 
     # headings サブコマンド
     headings_parser = subparsers.add_parser(
@@ -204,6 +210,7 @@ def cmd_build(args: argparse.Namespace) -> int:
                 provider=args.ai_provider,
                 model=args.ai_model,
                 region=args.ai_region,
+                reasoning_effort=args.ai_reasoning_effort,
             )
         except (ValueError, RuntimeError) as exc:
             logger.error(str(exc))

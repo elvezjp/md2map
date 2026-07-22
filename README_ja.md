@@ -195,6 +195,7 @@ uv run md2map build document.md --dry-run
 | `--summary-max-chars <N>` | `100` | ルールベースサマリーの文字数上限 |
 | `--summary-mode <MODE>` | `text` | サマリー生成モード（`text`: ルールベース / `ai`: LLM要約） |
 | `--ai-concurrency <N>` | `1` | セクション単位のAI呼び出し（要約・AI分割）の並列度（`1`: 逐次実行） |
+| `--ai-reasoning-effort <LEVEL>` | なし | 推論モデルの思考量（OpenAI用、例: `low`/`medium`/`high`/`max`。設定可能な値はモデル依存。未指定時は送信しない） |
 | `--verbose` | false | 詳細ログを出力 |
 | `--dry-run` | false | ファイル生成せずプレビューのみ |
 
