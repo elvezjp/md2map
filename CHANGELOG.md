@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - Unreleased
 
+### Added
+
+- **OpenAI-compatible API support**: Added a `base_url` field to `LLMConfig`, enabling connections to OpenAI-compatible APIs such as Moonshot AI's Kimi
+  - `OpenAIProvider` connects to the specified URL when `base_url` is set (defaults to the official OpenAI API when unset)
+  - Since some OpenAI-compatible APIs do not support `max_completion_tokens`, the provider falls back to the legacy `max_tokens` parameter when `base_url` is set
+  - `build_llm_config_from_env` now reads the `OPENAI_BASE_URL` environment variable, making compatible APIs available from the CLI as well
+
 ### Changed
 
 - **Moved version management to git tags** (#29): Removed the `versions/` directory that kept snapshots of older versions; only the latest code is now kept at the repository root
