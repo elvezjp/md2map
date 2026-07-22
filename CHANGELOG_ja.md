@@ -9,6 +9,13 @@
 
 ## [0.5.0] - Unreleased
 
+### 追加
+
+- **OpenAI 互換 API 対応**: `LLMConfig` に `base_url` フィールドを追加し、Moonshot AI（Kimi）等の OpenAI 互換 API に接続可能に
+  - `OpenAIProvider` が `base_url` 指定時にその URL へ接続（未指定時は従来どおり OpenAI 公式 API）
+  - OpenAI 互換 API には `max_completion_tokens` 未対応のものがあるため、`base_url` 指定時は従来の `max_tokens` パラメータで API を呼び出す
+  - `build_llm_config_from_env` が環境変数 `OPENAI_BASE_URL` を読み取り、CLI からも互換 API を利用可能に
+
 ### 変更
 
 - **バージョン管理を git tag へ移行**（#29）: 旧バージョンのスナップショットを保持していた `versions/` ディレクトリを削除し、リポジトリのルートで最新コードのみを管理する方針に変更

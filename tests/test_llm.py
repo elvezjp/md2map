@@ -56,9 +56,19 @@ class TestLLMConfig:
     def test_default_optional_fields(self):
         config = LLMConfig(provider="openai", model="gpt-4o-mini")
         assert config.api_key is None
+        assert config.base_url is None
         assert config.access_key_id is None
         assert config.secret_access_key is None
         assert config.region is None
+
+    def test_create_openai_compatible_config(self):
+        config = LLMConfig(
+            provider="openai",
+            model="kimi-k2-turbo-preview",
+            api_key="sk-test",
+            base_url="https://api.moonshot.ai/v1",
+        )
+        assert config.base_url == "https://api.moonshot.ai/v1"
 
 
 # ---------------------------------------------------------------------------
@@ -121,6 +131,20 @@ class TestBuildLLMConfigFromEnv:
     def test_openai_model_explicit(self):
         config = build_llm_config_from_env(provider="openai", model="gpt-4o-mini")
         assert config.model == "gpt-4o-mini"
+
+    @patch.dict(
+        os.environ,
+        {"OPENAI_API_KEY": "sk-env-key", "OPENAI_BASE_URL": "https://api.moonshot.ai/v1"},
+        clear=False,
+    )
+    def test_openai_base_url_from_env(self):
+        config = build_llm_config_from_env(provider="openai")
+        assert config.base_url == "https://api.moonshot.ai/v1"
+
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-env-key"}, clear=True)
+    def test_openai_base_url_default_none(self):
+        config = build_llm_config_from_env(provider="openai")
+        assert config.base_url is None
 
     @patch.dict(os.environ, {}, clear=True)
     def test_openai_missing_key_raises(self):
@@ -213,6 +237,63 @@ class TestOpenAIProviderAPICall:
         assert "max_tokens" not in call_kwargs.kwargs
         assert call_kwargs.kwargs["max_completion_tokens"] == 800
         assert result == "test response"
+
+    def test_base_url_passed_to_client(self):
+        """base_url 指定時、OpenAI クライアントに base_url が渡ることを確認"""
+        config = LLMConfig(
+            provider="openai",
+            model="kimi-k2-turbo-preview",
+            api_key="sk-test",
+            base_url="https://api.moonshot.ai/v1",
+        )
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "test response"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        mock_openai_module = MagicMock()
+        mock_openai_module.OpenAI.return_value = mock_client
+
+        with patch.dict("sys.modules", {"openai": mock_openai_module}):
+            import importlib
+            import md2map.llm.openai_provider as oai_mod
+            importlib.reload(oai_mod)
+            provider = oai_mod.OpenAIProvider(config)
+            result = provider.send_message("system", "user")
+
+        client_kwargs = mock_openai_module.OpenAI.call_args.kwargs
+        assert client_kwargs["base_url"] == "https://api.moonshot.ai/v1"
+        assert client_kwargs["api_key"] == "sk-test"
+        # 互換 API では max_completion_tokens ではなく max_tokens を使う
+        call_kwargs = mock_client.chat.completions.create.call_args
+        assert "max_tokens" in call_kwargs.kwargs
+        assert "max_completion_tokens" not in call_kwargs.kwargs
+        assert call_kwargs.kwargs["max_tokens"] == 800
+        assert result == "test response"
+
+    def test_no_base_url_client_default(self):
+        """base_url 未指定時、OpenAI クライアントに base_url が渡らないことを確認"""
+        config = LLMConfig(provider="openai", model="gpt-4o-mini", api_key="sk-test")
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "test response"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        mock_openai_module = MagicMock()
+        mock_openai_module.OpenAI.return_value = mock_client
+
+        with patch.dict("sys.modules", {"openai": mock_openai_module}):
+            import importlib
+            import md2map.llm.openai_provider as oai_mod
+            importlib.reload(oai_mod)
+            oai_mod.OpenAIProvider(config)
+
+        client_kwargs = mock_openai_module.OpenAI.call_args.kwargs
+        assert "base_url" not in client_kwargs
 
 
 # ---------------------------------------------------------------------------

@@ -64,7 +64,12 @@ def build_llm_config_from_env(
             or os.getenv("OPENAI_MODEL")
             or "gpt-4o-mini"
         )
-        return LLMConfig(provider="openai", model=resolved_model, api_key=api_key)
+        return LLMConfig(
+            provider="openai",
+            model=resolved_model,
+            api_key=api_key,
+            base_url=os.getenv("OPENAI_BASE_URL"),
+        )
 
     elif provider == "anthropic":
         api_key = os.getenv("ANTHROPIC_API_KEY")
