@@ -7,6 +7,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-07-22
+
+The OpenAI provider now supports specifying a custom endpoint URL (`base_url`), enabling connections to OpenAI-compatible APIs such as Moonshot AI's Kimi.
+
+### Added
+
+- **OpenAI-compatible API support**: Added a `base_url` field to `LLMConfig`
+  - `OpenAIProvider` connects to the specified URL when `base_url` is set (defaults to the official OpenAI API when unset)
+  - Since some OpenAI-compatible APIs do not support `max_completion_tokens`, the provider falls back to the legacy `max_tokens` parameter when `base_url` is set
+  - `build_llm_config_from_env` now reads the `OPENAI_BASE_URL` environment variable, making compatible APIs available from the CLI as well
+
 ## [0.4.3] - 2026-05-12
 
 Raised minimum supported Python version to 3.11 to resolve a `python-dotenv` vulnerability ([CVE-2026-28684](https://nvd.nist.gov/vuln/detail/CVE-2026-28684) / [GHSA-mf9w-mj56-hr94](https://github.com/theskumar/python-dotenv/security/advisories/GHSA-mf9w-mj56-hr94), CVSS 6.6 Medium). The fix in `python-dotenv 1.2.2` requires Python 3.10+, and we are aligning with other Elvez repositories on Python 3.11 as the minimum.

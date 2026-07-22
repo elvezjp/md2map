@@ -7,6 +7,17 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
+## [0.5.0] - 2026-07-22
+
+OpenAI プロバイダーで OpenAI 互換 API（Moonshot AI の Kimi 等）に接続できるよう、接続先 URL（`base_url`）の指定に対応しました。
+
+### 追加
+
+- **OpenAI 互換 API 対応**: `LLMConfig` に `base_url` フィールドを追加
+  - `OpenAIProvider` が `base_url` 指定時にその URL へ接続（未指定時は従来どおり OpenAI 公式 API）
+  - OpenAI 互換 API には `max_completion_tokens` 未対応のものがあるため、`base_url` 指定時は従来の `max_tokens` パラメータで API を呼び出す
+  - `build_llm_config_from_env` が環境変数 `OPENAI_BASE_URL` を読み取り、CLI からも互換 API を利用可能に
+
 ## [0.4.3] - 2026-05-12
 
 `python-dotenv` の脆弱性（[CVE-2026-28684](https://nvd.nist.gov/vuln/detail/CVE-2026-28684) / [GHSA-mf9w-mj56-hr94](https://github.com/theskumar/python-dotenv/security/advisories/GHSA-mf9w-mj56-hr94)、CVSS 6.6 Medium）を解消するため、最低サポート Python バージョンを 3.11 に引き上げました。`python-dotenv 1.2.2` の修正版が Python 3.10 以上を要件としているため、他の Elvez リポジトリと足並みを揃えて Python 3.11 を最低バージョンとしています。

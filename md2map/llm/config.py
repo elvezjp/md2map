@@ -12,6 +12,7 @@ class LLMConfig:
         provider: プロバイダー名 ("openai" | "anthropic" | "bedrock")
         model: モデルID
         api_key: API キー（Anthropic / OpenAI 用）
+        base_url: OpenAI 互換 API（Moonshot AI 等）の接続先 URL（OpenAI 用、未指定時は公式 API）
         access_key_id: アクセスキーID（Bedrock 用）
         secret_access_key: シークレットアクセスキー（Bedrock 用）
         region: リージョン（Bedrock 用）
@@ -21,6 +22,7 @@ class LLMConfig:
     provider: str
     model: str
     api_key: Optional[str] = None
+    base_url: Optional[str] = None
     access_key_id: Optional[str] = None
     secret_access_key: Optional[str] = None
     region: Optional[str] = None
