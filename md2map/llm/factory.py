@@ -38,6 +38,7 @@ def build_llm_config_from_env(
     provider: str = "bedrock",
     model: Optional[str] = None,
     region: Optional[str] = None,
+    reasoning_effort: Optional[str] = None,
 ) -> LLMConfig:
     """環境変数から LLMConfig を構築する（CLI / 後方互換用）
 
@@ -45,6 +46,8 @@ def build_llm_config_from_env(
         provider: プロバイダー名
         model: モデルID（未指定時は環境変数またはデフォルト値）
         region: リージョン（Bedrock 用）
+        reasoning_effort: 推論モデルの思考量（OpenAI 用、未指定時は環境変数
+            MD2MAP_REASONING_EFFORT にフォールバック）
 
     Returns:
         LLMConfig インスタンス
@@ -69,6 +72,8 @@ def build_llm_config_from_env(
             model=resolved_model,
             api_key=api_key,
             base_url=os.getenv("OPENAI_BASE_URL"),
+            reasoning_effort=reasoning_effort
+            or os.getenv("MD2MAP_REASONING_EFFORT"),
         )
 
     elif provider == "anthropic":

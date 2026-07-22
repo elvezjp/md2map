@@ -8,6 +8,7 @@ class OpenAIProvider(BaseLLMProvider):
     """OpenAI API を使用する LLM プロバイダー
 
     base_url を指定した場合は OpenAI 互換 API（Moonshot AI 等）に接続する。
+    reasoning_effort を指定した場合は推論モデルの思考量として送信する。
     """
 
     def __init__(self, config: LLMConfig) -> None:
@@ -22,6 +23,7 @@ class OpenAIProvider(BaseLLMProvider):
         self._model = config.model
         self._max_tokens = config.max_tokens
         self._base_url = config.base_url
+        self._reasoning_effort = config.reasoning_effort
         if config.base_url:
             self._client = OpenAI(api_key=config.api_key, base_url=config.base_url)
         else:
@@ -32,6 +34,11 @@ class OpenAIProvider(BaseLLMProvider):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
         ]
+        # reasoning_effort は指定時のみ送信する
+        # （非推論モデルはパラメータ非対応のため、未指定なら付けない）
+        extra_kwargs = {}
+        if self._reasoning_effort:
+            extra_kwargs["reasoning_effort"] = self._reasoning_effort
         # OpenAI 互換 API には max_completion_tokens 未対応のものがあるため、
         # base_url 指定時は従来の max_tokens パラメータを使用する
         if self._base_url:
@@ -39,12 +46,14 @@ class OpenAIProvider(BaseLLMProvider):
                 model=self._model,
                 messages=messages,
                 max_tokens=self._max_tokens,
+                **extra_kwargs,
             )
         else:
             response = self._client.chat.completions.create(
                 model=self._model,
                 messages=messages,
                 max_completion_tokens=self._max_tokens,
+                **extra_kwargs,
             )
         if not response.choices or not response.choices[0].message.content:
             raise RuntimeError("OpenAI API returned empty response")

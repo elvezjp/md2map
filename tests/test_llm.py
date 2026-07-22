@@ -70,6 +70,19 @@ class TestLLMConfig:
         )
         assert config.base_url == "https://api.moonshot.ai/v1"
 
+    def test_reasoning_effort_default_none(self):
+        config = LLMConfig(provider="openai", model="gpt-4o-mini")
+        assert config.reasoning_effort is None
+
+    def test_create_config_with_reasoning_effort(self):
+        config = LLMConfig(
+            provider="openai",
+            model="kimi-k3",
+            api_key="sk-test",
+            reasoning_effort="low",
+        )
+        assert config.reasoning_effort == "low"
+
 
 # ---------------------------------------------------------------------------
 # ファクトリ関数テスト
@@ -145,6 +158,27 @@ class TestBuildLLMConfigFromEnv:
     def test_openai_base_url_default_none(self):
         config = build_llm_config_from_env(provider="openai")
         assert config.base_url is None
+
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-env-key"}, clear=True)
+    def test_openai_reasoning_effort_explicit(self):
+        config = build_llm_config_from_env(
+            provider="openai", reasoning_effort="low"
+        )
+        assert config.reasoning_effort == "low"
+
+    @patch.dict(
+        os.environ,
+        {"OPENAI_API_KEY": "sk-env-key", "MD2MAP_REASONING_EFFORT": "high"},
+        clear=True,
+    )
+    def test_openai_reasoning_effort_from_env(self):
+        config = build_llm_config_from_env(provider="openai")
+        assert config.reasoning_effort == "high"
+
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-env-key"}, clear=True)
+    def test_openai_reasoning_effort_default_none(self):
+        config = build_llm_config_from_env(provider="openai")
+        assert config.reasoning_effort is None
 
     @patch.dict(os.environ, {}, clear=True)
     def test_openai_missing_key_raises(self):
@@ -294,6 +328,60 @@ class TestOpenAIProviderAPICall:
 
         client_kwargs = mock_openai_module.OpenAI.call_args.kwargs
         assert "base_url" not in client_kwargs
+
+    def _send_with_mock(self, config: LLMConfig) -> dict:
+        """モックしたクライアントで send_message し、API 呼び出しの kwargs を返す"""
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "test response"
+        mock_client.chat.completions.create.return_value = mock_response
+
+        mock_openai_module = MagicMock()
+        mock_openai_module.OpenAI.return_value = mock_client
+
+        with patch.dict("sys.modules", {"openai": mock_openai_module}):
+            import importlib
+            import md2map.llm.openai_provider as oai_mod
+            importlib.reload(oai_mod)
+            provider = oai_mod.OpenAIProvider(config)
+            provider.send_message("system", "user")
+
+        return mock_client.chat.completions.create.call_args.kwargs
+
+    def test_reasoning_effort_sent_with_base_url(self):
+        """reasoning_effort 指定時、互換 API（base_url あり）でも送信される"""
+        kwargs = self._send_with_mock(
+            LLMConfig(
+                provider="openai",
+                model="kimi-k3",
+                api_key="sk-test",
+                base_url="https://api.moonshot.ai/v1",
+                reasoning_effort="low",
+            )
+        )
+        assert kwargs["reasoning_effort"] == "low"
+        assert kwargs["max_tokens"] == 800
+
+    def test_reasoning_effort_sent_without_base_url(self):
+        """reasoning_effort 指定時、公式 API（base_url なし）でも送信される"""
+        kwargs = self._send_with_mock(
+            LLMConfig(
+                provider="openai",
+                model="gpt-5.2",
+                api_key="sk-test",
+                reasoning_effort="medium",
+            )
+        )
+        assert kwargs["reasoning_effort"] == "medium"
+        assert kwargs["max_completion_tokens"] == 800
+
+    def test_reasoning_effort_omitted_when_unset(self):
+        """reasoning_effort 未指定時は送信されない（従来動作）"""
+        kwargs = self._send_with_mock(
+            LLMConfig(provider="openai", model="gpt-4o-mini", api_key="sk-test")
+        )
+        assert "reasoning_effort" not in kwargs
 
 
 # ---------------------------------------------------------------------------

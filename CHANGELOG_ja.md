@@ -15,6 +15,10 @@
   - `OpenAIProvider` が `base_url` 指定時にその URL へ接続（未指定時は従来どおり OpenAI 公式 API）
   - OpenAI 互換 API には `max_completion_tokens` 未対応のものがあるため、`base_url` 指定時は従来の `max_tokens` パラメータで API を呼び出す
   - `build_llm_config_from_env` が環境変数 `OPENAI_BASE_URL` を読み取り、CLI からも互換 API を利用可能に
+- **推論モデルの思考量（reasoning_effort）指定に対応**: `LLMConfig` に `reasoning_effort` フィールドを追加
+  - `OpenAIProvider` が指定時のみ `reasoning_effort` を API に送信（未指定時は従来どおり送信せず、各モデルのデフォルト思考量で動作）
+  - 設定可能な値はモデル依存のため検証せず API へパススルー（例: Kimi K3 は low/high/max）
+  - CLI に `--ai-reasoning-effort` オプションを追加。環境変数 `MD2MAP_REASONING_EFFORT` にもフォールバック
 - **セクション単位の AI 呼び出しの並列実行**（#34）: AI 要約・AI 分割のセクション単位 LLM 呼び出しをスレッドプールで並列実行可能に
   - `MarkdownParser` に `ai_concurrency` 引数、CLI に `--ai-concurrency` オプションを追加（デフォルト `1` = 従来どおり逐次実行）
   - 出力（セクション・要約・警告の順序）は逐次実行時と一致することを保証
