@@ -283,21 +283,10 @@ md2map/
 │   └── utils/             # ユーティリティ
 │       ├── file_utils.py  # ファイル操作
 │       └── logger.py      # ログ設定
-├── add-line-numbers/      # 行番号付与ツール（※関連プロジェクト参照）
 ├── tests/                 # テストコード
 │   └── fixtures/          # テストフィクスチャ
 ├── docs/                  # ドキュメント
 │   └── examples/          # バージョンごとの出力例
-├── versions/              # 旧バージョンスナップショット
-│   ├── v0.1.0/            # v0.1.0 スナップショット
-│   ├── v0.2.0/            # v0.2.0 スナップショット
-│   ├── v0.3.0/            # v0.3.0 スナップショット
-│   ├── v0.3.1/            # v0.3.1 スナップショット
-│   ├── v0.3.2/            # v0.3.2 スナップショット
-│   ├── v0.4.0/            # v0.4.0 スナップショット
-│   ├── v0.4.1/            # v0.4.1 スナップショット
-│   ├── v0.4.2/            # v0.4.2 スナップショット
-│   └── README.md          # versionsディレクトリの説明
 ├── CHANGELOG.md           # 変更履歴（英語）
 ├── CHANGELOG_ja.md        # 変更履歴（日本語）
 ├── CONTRIBUTING.md        # コントリビューションガイド（英語）
@@ -323,11 +312,25 @@ md2map/
 - [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - AIモードで使用する行番号付与ツール（gitから自動インストール）
 - [code2map](https://github.com/elvezjp/code2map) - ソースコード解析向けの類似ツール
 
-> **Note**: add-line-numbersのgitからのインストールがうまくいかない場合は、リポジトリ内の `add-line-numbers/` ディレクトリ（git subtree）をローカルパスで参照するよう `pyproject.toml` を変更してください：
-> ```toml
-> [tool.uv.sources]
-> add-line-numbers = { path = "add-line-numbers", editable = true }
-> ```
+> **Note**: add-line-numbers のソースを参照したい場合は、上流リポジトリを直接 clone してください（`git clone https://github.com/elvezjp/add-line-numbers.git`）。このリポジトリは以前 git subtree として `add-line-numbers/` ディレクトリに取り込まれており、その構成は `v0.4.3` タグに保存されています。
+
+## バージョン管理
+
+リポジトリのルートでは最新のコードのみを保持し、バージョン管理は git tag で行います。
+
+- `main` ブランチには次バージョンの変更を [CHANGELOG_ja.md](CHANGELOG_ja.md) の `## [X.Y.Z] - Unreleased` 見出しの下に蓄積します
+- リリース時に見出しの日付を確定し、`pyproject.toml` のバージョンを確認のうえ、`vX.Y.Z` タグを作成します
+
+### 旧バージョンを利用する場合
+
+旧バージョン（v0.1.0〜v0.4.2）は、以前は `versions/` ディレクトリ配下にスナップショットとして保持していました。この構成は `v0.4.3` タグに保存されています。
+
+```bash
+git checkout v0.4.3
+# 旧バージョンは versions/ 配下にあります
+```
+
+**注意**: `v0.4.3` タグは旧構成のアーカイブ参照点のため、削除・付け替えを行わないでください。
 
 ## セキュリティ
 

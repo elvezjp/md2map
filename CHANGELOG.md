@@ -7,6 +7,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - Unreleased
+
+### Changed
+
+- **Moved version management to git tags** (#29): Removed the `versions/` directory that kept snapshots of older versions; only the latest code is now kept at the repository root
+  - Snapshots of old versions (v0.1.0–v0.4.2) are preserved under `versions/` in the `v0.4.3` tag
+  - Resolves duplicate Dependabot alerts caused by lockfiles under `versions/`
+  - Added a "Version Management" section to the README (EN/JA) and updated the Dependabot alert policy in SECURITY (EN/JA)
+- **Removed the `add-line-numbers/` directory (git subtree)** (#29): The dependency is now solely resolved as a git source via `[tool.uv.sources]` ([elvezjp/add-line-numbers](https://github.com/elvezjp/add-line-numbers)). The subtree layout is preserved in the `v0.4.3` tag
+- Removed `/versions` and `/add-line-numbers` from the sdist exclude list in `pyproject.toml`
+
 ## [0.4.3] - 2026-05-12
 
 Raised minimum supported Python version to 3.11 to resolve a `python-dotenv` vulnerability ([CVE-2026-28684](https://nvd.nist.gov/vuln/detail/CVE-2026-28684) / [GHSA-mf9w-mj56-hr94](https://github.com/theskumar/python-dotenv/security/advisories/GHSA-mf9w-mj56-hr94), CVSS 6.6 Medium). The fix in `python-dotenv 1.2.2` requires Python 3.10+, and we are aligning with other Elvez repositories on Python 3.11 as the minimum.
@@ -341,7 +352,7 @@ This version has the following limitations:
 | 0.2.0 | NLP and AI split modes; multi-provider LLM (OpenAI, Anthropic, Bedrock) |
 | 0.1.0 | Initial release: heading-based split, INDEX.md, parts/, MAP.json |
 
-For frozen source trees per release, see [versions/README.md](versions/README.md).
+For frozen source trees per release, see the corresponding git tag ([Tags](https://github.com/elvezjp/md2map/tags)). Snapshots of v0.4.2 and earlier are preserved under `versions/` in the `v0.4.3` tag.
 
 ## Links
 

@@ -283,21 +283,10 @@ md2map/
 │   └── utils/             # Utilities
 │       ├── file_utils.py  # File operations
 │       └── logger.py      # Log configuration
-├── add-line-numbers/      # Line number tool (see Related Projects)
 ├── tests/                 # Test code
 │   └── fixtures/          # Test fixtures
 ├── docs/                  # Documentation
 │   └── examples/          # Output examples per version
-├── versions/              # Old version snapshots
-│   ├── v0.1.0/            # v0.1.0 snapshot
-│   ├── v0.2.0/            # v0.2.0 snapshot
-│   ├── v0.3.0/            # v0.3.0 snapshot
-│   ├── v0.3.1/            # v0.3.1 snapshot
-│   ├── v0.3.2/            # v0.3.2 snapshot
-│   ├── v0.4.0/            # v0.4.0 snapshot
-│   ├── v0.4.1/            # v0.4.1 snapshot
-│   ├── v0.4.2/            # v0.4.2 snapshot
-│   └── README.md          # versions directory description
 ├── CHANGELOG.md           # Version history (English)
 ├── CHANGELOG_ja.md        # Version history (Japanese)
 ├── CONTRIBUTING.md        # Contribution guidelines (English)
@@ -323,11 +312,25 @@ For details, see [spec.md](spec.md).
 - [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - Line number tool used in AI mode (installed from git automatically)
 - [code2map](https://github.com/elvezjp/code2map) - Similar tool for source code analysis
 
-> **Note**: If installing add-line-numbers from git fails, you can use the local `add-line-numbers/` directory (git subtree) instead by modifying `pyproject.toml`:
-> ```toml
-> [tool.uv.sources]
-> add-line-numbers = { path = "add-line-numbers", editable = true }
-> ```
+> **Note**: If you need the add-line-numbers sources for reference, clone the upstream repository directly (`git clone https://github.com/elvezjp/add-line-numbers.git`). This repository was previously embedded as a git subtree under `add-line-numbers/`; that layout is preserved in the `v0.4.3` tag.
+
+## Version Management
+
+Only the latest code is kept at the repository root. Versions are managed with git tags.
+
+- The `main` branch accumulates changes for the next version under a `## [X.Y.Z] - Unreleased` heading in [CHANGELOG.md](CHANGELOG.md)
+- On release, the heading date is finalized, the version in `pyproject.toml` is confirmed, and a `vX.Y.Z` tag is created
+
+### Using Old Versions
+
+Old versions (v0.1.0–v0.4.2) were previously kept as snapshots under a `versions/` directory. That layout is preserved in the `v0.4.3` tag:
+
+```bash
+git checkout v0.4.3
+# Old versions are under versions/
+```
+
+**Note**: The `v0.4.3` tag serves as the archive reference point for the old layout. Do not delete or move it.
 
 ## Security
 
