@@ -112,6 +112,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         choices=["text", "ai"],
         help="サマリー生成モード（text: ルールベース, ai: LLM要約）",
     )
+    build_parser.add_argument(
+        "--ai-concurrency",
+        type=int,
+        default=1,
+        help="セクション単位の AI 呼び出し（要約・AI分割）の並列度（デフォルト: 1 = 逐次実行）",
+    )
 
     # headings サブコマンド
     headings_parser = subparsers.add_parser(
@@ -212,6 +218,7 @@ def cmd_build(args: argparse.Namespace) -> int:
             section_overrides=section_overrides,
             summary_max_chars=args.summary_max_chars,
             summary_mode=args.summary_mode,
+            ai_concurrency=args.ai_concurrency,
         )
     except (ValueError, RuntimeError) as exc:
         logger.error(str(exc))

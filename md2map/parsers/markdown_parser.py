@@ -3,6 +3,8 @@
 import json
 import math
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
@@ -92,6 +94,7 @@ class MarkdownParser(BaseParser):
         section_overrides: Optional[List[Dict[str, any]]] = None,
         summary_max_chars: int = 100,
         summary_mode: str = "text",
+        ai_concurrency: int = 1,
     ) -> None:
         if split_mode not in {"heading", "nlp", "ai"}:
             raise ValueError(f"Invalid split_mode: {split_mode}")
@@ -100,19 +103,22 @@ class MarkdownParser(BaseParser):
         self._nlp_tokenizer = None
         self._llm_provider: Optional["BaseLLMProvider"] = None
         self._llm_config = llm_config
+        self._llm_init_lock = threading.Lock()
         if split_mode == "nlp":
             self._ensure_nlp_tokenizer()
-        if split_mode == "ai":
-            if llm_provider is not None:
-                self._llm_provider = llm_provider
-            else:
-                self._ensure_llm_provider()
+        # 注入された llm_provider は summary_mode="ai" のみの場合でも使用する
+        if llm_provider is not None:
+            self._llm_provider = llm_provider
+        elif split_mode == "ai":
+            self._ensure_llm_provider()
         self.split_mode = split_mode
         self.split_threshold = max(1, split_threshold)
         self.max_subsections = max(1, max_subsections)
         self._ai_prompt_extra_notes = ai_prompt_extra_notes
         self.summary_max_chars = max(1, summary_max_chars)
         self.summary_mode = summary_mode
+        # セクション単位の AI 呼び出し（要約・AI分割）の並列度。1 で従来の逐次実行
+        self.ai_concurrency = max(1, ai_concurrency)
         # セクション単位のオーバーライドマップ（start_line → 設定 dict）
         self._override_map: Dict[int, Dict[str, any]] = {}
         if section_overrides:
@@ -120,17 +126,20 @@ class MarkdownParser(BaseParser):
                 self._override_map[o["start_line"]] = o
 
     def _ensure_llm_provider(self) -> None:
-        """LLM provider が未初期化なら初期化する（遅延初期化）"""
+        """LLM provider が未初期化なら初期化する（遅延初期化・スレッドセーフ）"""
         if self._llm_provider is not None:
             return
-        if self._llm_config is not None:
-            from md2map.llm.factory import get_llm_provider
-            self._llm_provider = get_llm_provider(self._llm_config)
-        else:
-            # 後方互換: 環境変数からフォールバック
-            from md2map.llm.factory import build_llm_config_from_env, get_llm_provider
-            fallback_config = build_llm_config_from_env(provider="bedrock")
-            self._llm_provider = get_llm_provider(fallback_config)
+        with self._llm_init_lock:
+            if self._llm_provider is not None:
+                return
+            if self._llm_config is not None:
+                from md2map.llm.factory import get_llm_provider
+                self._llm_provider = get_llm_provider(self._llm_config)
+            else:
+                # 後方互換: 環境変数からフォールバック
+                from md2map.llm.factory import build_llm_config_from_env, get_llm_provider
+                fallback_config = build_llm_config_from_env(provider="bedrock")
+                self._llm_provider = get_llm_provider(fallback_config)
 
     def _ensure_nlp_tokenizer(self) -> None:
         """NLP tokenizer が未初期化なら初期化する（遅延初期化）"""
@@ -264,9 +273,8 @@ class MarkdownParser(BaseParser):
         if self.split_mode != "heading" or has_non_heading_override:
             sections = self._refine_sections(sections, lines)
 
-        # 各セクションの追加情報を抽出
-        for section in sections:
-            self._extract_section_info(section, lines)
+        # 各セクションの追加情報を抽出（AI要約は ai_concurrency に応じて並列実行）
+        self._extract_section_infos(sections, lines)
 
         return sections, warnings
 
@@ -446,12 +454,49 @@ class MarkdownParser(BaseParser):
         self._build_hierarchy(filtered)
         return filtered
 
-    def _extract_section_info(self, section: Section, lines: List[str]) -> None:
+    def _extract_section_infos(
+        self, sections: List[Section], lines: List[str]
+    ) -> None:
+        """全セクションの追加情報を抽出する
+
+        AI要約が必要なセクションがあり ai_concurrency が 2 以上の場合、
+        セクション単位でスレッドプールにより並列実行する。
+        警告はセクション順に追記し、逐次実行時と同一の順序を保証する。
+        """
+        needs_ai = any(
+            self._resolve_settings(s)["summary_mode"] == "ai" for s in sections
+        )
+        if self.ai_concurrency <= 1 or len(sections) <= 1 or not needs_ai:
+            for section in sections:
+                self._extract_section_info(section, lines)
+            return
+
+        # 並列実行前にプロバイダーを初期化（遅延初期化の競合を回避）
+        self._ensure_llm_provider()
+
+        def run(section: Section) -> List[str]:
+            buffer: List[str] = []
+            self._extract_section_info(section, lines, warnings_sink=buffer)
+            return buffer
+
+        max_workers = min(self.ai_concurrency, len(sections))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            buffers = list(executor.map(run, sections))
+        for buffer in buffers:
+            self._warnings.extend(buffer)
+
+    def _extract_section_info(
+        self,
+        section: Section,
+        lines: List[str],
+        warnings_sink: Optional[List[str]] = None,
+    ) -> None:
         """セクションの追加情報（要約、キーワード、リンク）を抽出する
 
         Args:
             section: セクション（変更される）
             lines: ファイルの行リスト
+            warnings_sink: 警告の追記先（未指定時は self._warnings）
         """
         settings = self._resolve_settings(section)
         summary_mode = settings["summary_mode"]
@@ -465,7 +510,9 @@ class MarkdownParser(BaseParser):
         skip_first = self.HEADING_PATTERN.match(section_lines[0].rstrip()) is not None
 
         if summary_mode == "ai":
-            section.summary = self._generate_ai_summary(section, section_text, max_chars)
+            section.summary = self._generate_ai_summary(
+                section, section_text, max_chars, warnings_sink=warnings_sink
+            )
         else:
             section.summary = self._extract_summary(
                 section_lines, skip_first_line=skip_first, max_chars=max_chars
@@ -554,7 +601,11 @@ class MarkdownParser(BaseParser):
         )
 
     def _generate_ai_summary(
-        self, section: Section, section_text: str, max_chars: int
+        self,
+        section: Section,
+        section_text: str,
+        max_chars: int,
+        warnings_sink: Optional[List[str]] = None,
     ) -> Optional[str]:
         """LLMを使用してセクションの要約を生成する
 
@@ -562,6 +613,7 @@ class MarkdownParser(BaseParser):
             section: セクション
             section_text: セクションのテキスト
             max_chars: 要約の最大文字数
+            warnings_sink: 警告の追記先（未指定時は self._warnings）
 
         Returns:
             AI生成の要約文字列、失敗時は None
@@ -582,7 +634,8 @@ class MarkdownParser(BaseParser):
         except Exception as exc:
             warning_msg = f"AI summary generation failed for '{section.title}': {exc}"
             logger.warning(warning_msg)
-            self._warnings.append(warning_msg)
+            sink = self._warnings if warnings_sink is None else warnings_sink
+            sink.append(warning_msg)
             return None
 
     def _count_words(self, text: str) -> int:
@@ -632,11 +685,91 @@ class MarkdownParser(BaseParser):
 
         return own_start, own_end
 
+    def _ai_split_args(
+        self, section: Section, sections: List[Section], lines: List[str]
+    ) -> Optional[Tuple[int, int, int, str]]:
+        """セクションが AI 分割対象なら _select_chunks_ai の引数を返す
+
+        _refine_sections() の AI 分岐と同じ判定条件を使用する。
+        対象外の場合は None を返す。
+
+        Returns:
+            (own_start, own_end, target_parts, extra_notes) または None
+        """
+        settings = self._resolve_settings(section)
+        if settings["split_mode"] != "ai":
+            return None
+        max_subs = max(1, settings["max_subsections"])
+        if max_subs <= 1:
+            return None
+        own_start, own_end = self._get_own_content_range(section, sections)
+        if own_start > own_end:
+            return None
+        own_text = "".join(lines[own_start - 1 : own_end])
+        total_count = self._count_words(own_text)
+        threshold = max(1, settings["split_threshold"])
+        if total_count < threshold:
+            return None
+        if own_end - own_start + 1 < 2:
+            return None
+        target_parts = min(max_subs, max(2, math.ceil(total_count / threshold)))
+        return own_start, own_end, target_parts, settings.get("ai_prompt_extra_notes", "")
+
+    def _precompute_ai_chunks(
+        self, sections: List[Section], lines: List[str]
+    ) -> Dict[int, List[Tuple[int, int]]]:
+        """AI 分割対象セクションの _select_chunks_ai 結果を並列に先行計算する
+
+        ai_concurrency が 1 の場合や対象が 1 件以下の場合は空の辞書を返し、
+        呼び出し元（_refine_sections）の逐次処理にフォールバックする。
+        警告はセクション順に追記し、逐次実行時と同一の順序を保証する。
+
+        Returns:
+            セクションのインデックス → line_ranges の辞書
+        """
+        if self.ai_concurrency <= 1:
+            return {}
+
+        tasks: List[Tuple[int, Section, Tuple[int, int, int, str]]] = []
+        for index, section in enumerate(sections):
+            args = self._ai_split_args(section, sections, lines)
+            if args is not None:
+                tasks.append((index, section, args))
+        if len(tasks) <= 1:
+            return {}
+
+        # 並列実行前にプロバイダーを初期化（遅延初期化の競合を回避）
+        self._ensure_llm_provider()
+
+        def run(
+            task: Tuple[int, Section, Tuple[int, int, int, str]]
+        ) -> Tuple[List[Tuple[int, int]], List[str]]:
+            _, section, (own_start, own_end, target_parts, extra_notes) = task
+            buffer: List[str] = []
+            line_ranges, _ = self._select_chunks_ai(
+                section, lines, own_start, own_end, target_parts,
+                extra_notes=extra_notes, warnings_sink=buffer,
+            )
+            return line_ranges, buffer
+
+        max_workers = min(self.ai_concurrency, len(tasks))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            outputs = list(executor.map(run, tasks))
+
+        results: Dict[int, List[Tuple[int, int]]] = {}
+        for (index, _, _), (line_ranges, buffer) in zip(tasks, outputs, strict=True):
+            results[index] = line_ranges
+            self._warnings.extend(buffer)
+        return results
+
     def _refine_sections(self, sections: List[Section], lines: List[str]) -> List[Section]:
         """セクションを再分割してサブスプリットを挿入する"""
         refined: List[Section] = []
 
-        for section in sections:
+        # AI 分割対象の結果を先行計算（ai_concurrency >= 2 のとき並列実行）
+        ai_chunk_cache = self._precompute_ai_chunks(sections, lines)
+
+        for index, section in enumerate(sections):
             # セクションごとに設定を解決
             settings = self._resolve_settings(section)
             split_mode = settings["split_mode"]
@@ -675,10 +808,14 @@ class MarkdownParser(BaseParser):
                     max(2, math.ceil(total_count / threshold)),
                 )
 
-                line_ranges, _ = self._select_chunks_ai(
-                    section, lines, own_start, own_end, target_parts,
-                    extra_notes=extra_notes,
-                )
+                cached = ai_chunk_cache.get(index)
+                if cached is not None:
+                    line_ranges = cached
+                else:
+                    line_ranges, _ = self._select_chunks_ai(
+                        section, lines, own_start, own_end, target_parts,
+                        extra_notes=extra_notes,
+                    )
                 if not line_ranges:
                     line_ranges = self._chunk_lines_by_threshold(
                         lines, own_start, own_end, total_count, target_parts
@@ -892,6 +1029,7 @@ class MarkdownParser(BaseParser):
         own_end: int,
         target_parts: int,
         extra_notes: str = "",
+        warnings_sink: Optional[List[str]] = None,
     ) -> Tuple[List[Tuple[int, int]], None]:
         """AI（LLMプロバイダー）で行番号ベースのグループ分けを取得する
 
@@ -922,7 +1060,8 @@ class MarkdownParser(BaseParser):
         except Exception as exc:
             warning_msg = f"AI API call failed: {exc}"
             logger.warning(warning_msg)
-            self._warnings.append(warning_msg)
+            sink = self._warnings if warnings_sink is None else warnings_sink
+            sink.append(warning_msg)
             return [], None
 
         # LLM が ```json ... ``` で囲んで返す場合に対応
