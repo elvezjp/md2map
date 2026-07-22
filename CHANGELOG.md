@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Snapshots of old versions (v0.1.0–v0.4.2) are preserved under `versions/` in the `v0.4.3` tag
   - Resolves duplicate Dependabot alerts caused by lockfiles under `versions/`
   - Added a "Version Management" section to the README (EN/JA) and updated the Dependabot alert policy in SECURITY (EN/JA)
-  - Removed `/versions` from the sdist exclude list in `pyproject.toml`
+- **Removed the `add-line-numbers/` directory (git subtree)** (#29): The dependency is now solely resolved as a git source via `[tool.uv.sources]` ([elvezjp/add-line-numbers](https://github.com/elvezjp/add-line-numbers)). The subtree layout is preserved in the `v0.4.3` tag
+- Removed `/versions` and `/add-line-numbers` from the sdist exclude list in `pyproject.toml`
 
 ## [0.4.3] - 2026-05-12
 

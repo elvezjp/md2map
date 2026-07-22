@@ -15,7 +15,8 @@
   - 旧バージョン（v0.1.0〜v0.4.2）のスナップショットは `v0.4.3` タグの `versions/` 配下に保存されています
   - `versions/` 配下の lockfile に起因していた Dependabot アラートの重複通知を解消
   - README（日英）に「バージョン管理」セクションを追加し、SECURITY（日英）の Dependabot アラート運用方針を更新
-  - `pyproject.toml` の sdist 除外リストから `/versions` を削除
+- **`add-line-numbers/` ディレクトリ（git subtree）を削除**（#29）: 依存は `[tool.uv.sources]` による git ソース参照（[elvezjp/add-line-numbers](https://github.com/elvezjp/add-line-numbers)）に一本化。subtree 構成は `v0.4.3` タグに保存されています
+- `pyproject.toml` の sdist 除外リストから `/versions`・`/add-line-numbers` を削除
 
 ## [0.4.3] - 2026-05-12
 

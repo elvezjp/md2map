@@ -95,7 +95,7 @@ We operate Dependabot alerts according to the following policy.
 
 **Vulnerable**: **Remediate** (update dependencies / open a PR).
 
-**Note**: Up to v0.4.3, snapshots of older versions were kept under `versions/` in the repository, and Dependabot alerts also fired against those archived lockfiles. The `versions/` directory was removed in 0.5.0 (version management moved to git tags; see the README), so alerts now only fire against manifests at the repository root. Any remaining alerts originating from the removed old versions are dismissed and closed after reviewing their impact.
+**Note**: Up to v0.4.3, the repository kept snapshots of older versions (`versions/`) and an embedded dependency subtree (`add-line-numbers/`), and Dependabot alerts also fired against those manifests/lockfiles. Both directories were removed in 0.5.0 (version management moved to git tags; see the README), so alerts now only fire against manifests at the repository root. Any remaining alerts originating from the removed directories are dismissed and closed after reviewing their impact.
 
 ## Security Best Practices
 

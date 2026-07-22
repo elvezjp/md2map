@@ -283,7 +283,6 @@ md2map/
 │   └── utils/             # ユーティリティ
 │       ├── file_utils.py  # ファイル操作
 │       └── logger.py      # ログ設定
-├── add-line-numbers/      # 行番号付与ツール（※関連プロジェクト参照）
 ├── tests/                 # テストコード
 │   └── fixtures/          # テストフィクスチャ
 ├── docs/                  # ドキュメント
@@ -313,11 +312,7 @@ md2map/
 - [add-line-numbers](https://github.com/elvezjp/add-line-numbers) - AIモードで使用する行番号付与ツール（gitから自動インストール）
 - [code2map](https://github.com/elvezjp/code2map) - ソースコード解析向けの類似ツール
 
-> **Note**: add-line-numbersのgitからのインストールがうまくいかない場合は、リポジトリ内の `add-line-numbers/` ディレクトリ（git subtree）をローカルパスで参照するよう `pyproject.toml` を変更してください：
-> ```toml
-> [tool.uv.sources]
-> add-line-numbers = { path = "add-line-numbers", editable = true }
-> ```
+> **Note**: add-line-numbers のソースを参照したい場合は、上流リポジトリを直接 clone してください（`git clone https://github.com/elvezjp/add-line-numbers.git`）。このリポジトリは以前 git subtree として `add-line-numbers/` ディレクトリに取り込まれており、その構成は `v0.4.3` タグに保存されています。
 
 ## バージョン管理
 

@@ -77,7 +77,6 @@ include = [
     "/pyproject.toml",
 ]
 exclude = [
-    "/add-line-numbers",
     "/docs",
     "/tests",
     "/main.py",
