@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -9,7 +9,7 @@ resolution-markers = [
 [[package]]
 name = "add-line-numbers"
 version = "0.1.2"
-source = { git = "https://github.com/elvezjp/add-line-numbers.git?branch=main#344a660c67bfb5d8e22a4c86650a6c01813a9b3c" }
+source = { git = "https://github.com/elvezjp/add-line-numbers.git?rev=344a660c67bfb5d8e22a4c86650a6c01813a9b3c#344a660c67bfb5d8e22a4c86650a6c01813a9b3c" }
 
 [[package]]
 name = "annotated-types"
@@ -521,7 +521,7 @@ nlp = [
 
 [package.metadata]
 requires-dist = [
-    { name = "add-line-numbers", git = "https://github.com/elvezjp/add-line-numbers.git?branch=main" },
+    { name = "add-line-numbers", git = "https://github.com/elvezjp/add-line-numbers.git?rev=344a660c67bfb5d8e22a4c86650a6c01813a9b3c" },
     { name = "anthropic", marker = "extra == 'ai'", specifier = ">=0.18" },
     { name = "boto3", marker = "extra == 'ai'", specifier = ">=1.28" },
     { name = "md2map", extras = ["nlp", "ai"], marker = "extra == 'dev'" },

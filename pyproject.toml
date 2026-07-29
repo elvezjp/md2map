@@ -27,7 +27,9 @@ dependencies = [
 [tool.uv.sources]
 # NOTE: このリポジトリで uv を使う場合、`add-line-numbers` は公開リポジトリから取得する。
 # `[project.dependencies]` 側にも残し、実行時依存として明示する。
-add-line-numbers = { git = "https://github.com/elvezjp/add-line-numbers.git", branch = "main" }
+# branch 参照は指し先が動くため、参照先が差し替わっても気づけない（CWE-829）。
+# uv.lock が既に解決しているコミットを明示し、更新をレビュー対象にする。
+add-line-numbers = { git = "https://github.com/elvezjp/add-line-numbers.git", rev = "344a660c67bfb5d8e22a4c86650a6c01813a9b3c" }
 
 [project.urls]
 Homepage = "https://github.com/elvezjp/md2map"
