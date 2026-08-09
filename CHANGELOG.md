@@ -7,6 +7,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-08-09
+
+Pins the git reference for `add-line-numbers` to a release tag. There are no changes to the implementation or to the output of any command.
+
+### Security
+
+- **Replaced the mutable git reference for `add-line-numbers` with a fixed tag** (CWE-829): `[tool.uv.sources]` referenced `branch = "main"`, so the resolved commit moved whenever `main` advanced and a change of reference target could go unnoticed
+  - The reference is now `tag = "v0.1.3"`. Re-locking no longer moves the target, and updating it becomes a reviewable change to `pyproject.toml`
+  - [add-line-numbers v0.1.3](https://github.com/elvezjp/add-line-numbers/releases/tag/v0.1.3) is the first tagged version to include the `cryptography >= 48.0.1` constraint ([GHSA-537c-gmf6-5ccf](https://github.com/pyca/cryptography/security/advisories/GHSA-537c-gmf6-5ccf)). That constraint only affects development dependencies and does not change the runtime
+  - `uv.lock` already recorded a resolved commit, so `uv sync` was reproducible before this change as well. What this closes is the path where re-locking silently moves to a different commit
+
+### Changed
+
+- **Added a version constraint to `[project.dependencies]`**: `add-line-numbers` is now declared as `add-line-numbers>=0.1.3`
+  - `[tool.uv.sources]` is not transitive — it applies only to the project it is declared in — so the pin above does not reach repositories that depend on md2map through a git source. Those repositories declare their own source and resolve `add-line-numbers` independently
+  - A version constraint is recorded in the built wheel's `Requires-Dist` and therefore does apply transitively, so a downstream repository that resolves an older version is detected at resolution time
+
+### Notes
+
+- `docs/examples/` is unchanged and remains at `v0.5.0`, since this release does not alter the output of any command
+
 ## [0.5.0] - 2026-07-22
 
 ### Added
@@ -363,6 +384,7 @@ This version has the following limitations:
 
 | Version | Highlights |
 | ------- | ---------- |
+| 0.5.1 | `add-line-numbers` git reference pinned to tag `v0.1.3`; version constraint added |
 | 0.5.0 | OpenAI-compatible API & reasoning-effort support; concurrent per-section AI calls; version management via git tags |
 | 0.4.3 | Minimum Python raised to 3.11 (python-dotenv fix); PyPI publication metadata |
 | 0.4.2 | OpenAI/Bedrock client APIs updated; `.env` loading; authentication docs |
@@ -381,6 +403,7 @@ For frozen source trees per release, see the corresponding git tag ([Tags](https
 - [Repository](https://github.com/elvezjp/md2map)
 - [Issue Tracker](https://github.com/elvezjp/md2map/issues)
 
+[0.5.1]: https://github.com/elvezjp/md2map/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/elvezjp/md2map/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/elvezjp/md2map/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2

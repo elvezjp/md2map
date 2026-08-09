@@ -7,6 +7,27 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
+## [0.5.1] - 2026-08-09
+
+`add-line-numbers` の git 参照をリリースタグに固定しました。実装および各コマンドの出力に変更はありません。
+
+### セキュリティ
+
+- **`add-line-numbers` の可変な git 参照を固定タグに変更**（CWE-829）: `[tool.uv.sources]` が `branch = "main"` を参照しており、`main` が進むたびに解決されるコミットが動くため、参照先が差し替わっても気づけない状態でした
+  - 参照を `tag = "v0.1.3"` に変更しました。再解決で指し先が動かなくなり、更新は `pyproject.toml` の差分としてレビュー対象になります
+  - [add-line-numbers v0.1.3](https://github.com/elvezjp/add-line-numbers/releases/tag/v0.1.3) は、`cryptography >= 48.0.1` の制約（[GHSA-537c-gmf6-5ccf](https://github.com/pyca/cryptography/security/advisories/GHSA-537c-gmf6-5ccf) 対応）を含む最初のタグ付きバージョンです。この制約は開発依存にのみ影響し、ランタイムには影響しません
+  - `uv.lock` は元から解決済みコミットを記録していたため、`uv sync` する分には以前から再現性がありました。本変更が塞ぐのは「再解決した際に、意図せず別のコミットへ動く」経路です
+
+### 変更
+
+- **`[project.dependencies]` にバージョン制約を追加**: `add-line-numbers` の宣言を `add-line-numbers>=0.1.3` に変更しました
+  - `[tool.uv.sources]` は非推移的で、宣言したプロジェクトにのみ適用されます。そのため上記のタグ固定は、md2map を git ソース経由で参照するリポジトリには届きません。それらのリポジトリは自身でソースを宣言し、`add-line-numbers` を独立に解決しています
+  - バージョン制約はビルドされた wheel の `Requires-Dist` に記録されるため推移的に効きます。依存元が古い版を解決した場合、解決時点で検出できます
+
+### 補足
+
+- 本リリースでは各コマンドの出力が変わらないため、`docs/examples/` は `v0.5.0` のまま変更していません
+
 ## [0.5.0] - 2026-07-22
 
 ### 追加
@@ -363,6 +384,7 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 
 | バージョン | 主な内容 |
 | ---------- | -------- |
+| 0.5.1 | `add-line-numbers` の git 参照をタグ `v0.1.3` に固定、バージョン制約を追加 |
 | 0.5.0 | OpenAI 互換 API・reasoning_effort 対応、セクション単位 AI 呼び出しの並列実行、バージョン管理を git tag へ移行 |
 | 0.4.3 | 最低 Python を 3.11 に引き上げ（python-dotenv 修正）、PyPI 公開メタデータ整備 |
 | 0.4.2 | OpenAI／Bedrock の API 呼び出し更新、`.env` 読み込み、認証まわりのドキュメント |
@@ -381,6 +403,7 @@ AIサブスプリットのプロンプトカスタマイズに対応。プロン
 - [リポジトリ](https://github.com/elvezjp/md2map)
 - [Issueトラッカー](https://github.com/elvezjp/md2map/issues)
 
+[0.5.1]: https://github.com/elvezjp/md2map/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/elvezjp/md2map/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/elvezjp/md2map/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/elvezjp/md2map/compare/v0.4.1...v0.4.2
