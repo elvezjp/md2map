@@ -21,15 +21,18 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: Markdown",
 ]
 dependencies = [
-    "add-line-numbers",
+    # `[tool.uv.sources]` は非推移的で、md2map を依存として取り込む側には届かない。
+    # バージョン制約は推移的に効くため、依存元が別のソース定義で古い版を解決した場合に
+    # ここで検出できる。
+    "add-line-numbers>=0.1.3",
 ]
 
 [tool.uv.sources]
 # NOTE: このリポジトリで uv を使う場合、`add-line-numbers` は公開リポジトリから取得する。
 # `[project.dependencies]` 側にも残し、実行時依存として明示する。
 # branch 参照は指し先が動くため、参照先が差し替わっても気づけない（CWE-829）。
-# uv.lock が既に解決しているコミットを明示し、更新をレビュー対象にする。
-add-line-numbers = { git = "https://github.com/elvezjp/add-line-numbers.git", rev = "344a660c67bfb5d8e22a4c86650a6c01813a9b3c" }
+# タグを参照し、更新は pyproject.toml の差分としてレビュー対象にする。
+add-line-numbers = { git = "https://github.com/elvezjp/add-line-numbers.git", tag = "v0.1.3" }
 
 [project.urls]
 Homepage = "https://github.com/elvezjp/md2map"
