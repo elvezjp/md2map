@@ -17,6 +17,7 @@ Pins the git reference for `add-line-numbers` to a release tag. There are no cha
   - The reference is now `tag = "v0.1.3"`. Re-locking no longer moves the target, and updating it becomes a reviewable change to `pyproject.toml`
   - [add-line-numbers v0.1.3](https://github.com/elvezjp/add-line-numbers/releases/tag/v0.1.3) is the first tagged version to include the `cryptography >= 48.0.1` constraint ([GHSA-537c-gmf6-5ccf](https://github.com/pyca/cryptography/security/advisories/GHSA-537c-gmf6-5ccf)). That constraint only affects development dependencies and does not change the runtime
   - `uv.lock` already recorded a resolved commit, so `uv sync` was reproducible before this change as well. What this closes is the path where re-locking silently moves to a different commit
+- **Updated the resolved commit in `uv.lock`**: the `v0.1.3` tag was re-cut upstream, so the `add-line-numbers` commit recorded in `uv.lock` is updated from `f81b097` to `9b6568c`
 
 ### Changed
 
@@ -24,9 +25,11 @@ Pins the git reference for `add-line-numbers` to a release tag. There are no cha
   - `[tool.uv.sources]` is not transitive — it applies only to the project it is declared in — so the pin above does not reach repositories that depend on md2map through a git source. Those repositories declare their own source and resolve `add-line-numbers` independently
   - A version constraint is recorded in the built wheel's `Requires-Dist` and therefore does apply transitively, so a downstream repository that resolves an older version is detected at resolution time
 
-### Notes
+### Documentation
 
-- `docs/examples/` is unchanged and remains at `v0.5.0`, since this release does not alter the output of any command
+- **Added `docs/examples/v0.5.1/`**: example output produced by running each command with this release's implementation
+  - The heading and nlp modes and the `headings` command produce output identical to `v0.5.0`, since the implementation is unchanged
+  - The AI modes (`output-ai` / `output-ai-summary`) depend on the LLM's response, so summaries differ from `v0.5.0`
 
 ## [0.5.0] - 2026-07-22
 
