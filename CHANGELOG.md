@@ -7,6 +7,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- **Raised the floor of the transitive dependency `anyio` to `>= 4.14.2`** to address two advisories published on 2026-09-18 (Dependabot [#71](https://github.com/elvezjp/md2map/security/dependabot/71) / [#70](https://github.com/elvezjp/md2map/security/dependabot/70))
+  - [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6) (critical, CVE-2026-63374): `TLSStream` encoded host names with IDNA 2003, enabling potential TLS certificate spoofing
+  - [GHSA-5p39-cfhj-2xmp](https://github.com/advisories/GHSA-5p39-cfhj-2xmp) (medium, CVE-2026-64847): process-pool workers could block indefinitely on undrained stderr
+  - `anyio` is not a direct dependency; it is pulled in through `httpx` / `openai` / `anthropic`, so the floor is declared as a `[tool.uv]` `constraint-dependencies` entry in `pyproject.toml`
+  - `uv.lock` regenerated: `anyio` 4.13.0 → 4.15.1, and `typing-extensions` split per Python version (4.15.0 for 3.15+, 4.16.0 below it)
+
 ## [0.5.1] - 2026-08-09
 
 Pins the git reference for `add-line-numbers` to a release tag. There are no changes to the implementation or to the output of any command.

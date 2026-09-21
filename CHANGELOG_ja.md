@@ -7,6 +7,16 @@
 このファイルの形式は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) に基づいており、
 このプロジェクトは [セマンティックバージョニング](https://semver.org/lang/ja/) に準拠しています。
 
+## [未リリース]
+
+### セキュリティ
+
+- **推移的依存の `anyio` の下限を `>= 4.14.2` に引き上げ**、2026-09-18 に公開された2件のアドバイザリに対応（Dependabot [#71](https://github.com/elvezjp/md2map/security/dependabot/71) / [#70](https://github.com/elvezjp/md2map/security/dependabot/70)）
+  - [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6)（critical、CVE-2026-63374）: `TLSStream` がホスト名を IDNA 2003 で符号化しており、TLS 証明書のなりすましにつながる可能性があった
+  - [GHSA-5p39-cfhj-2xmp](https://github.com/advisories/GHSA-5p39-cfhj-2xmp)（medium、CVE-2026-64847）: プロセスプールのワーカーが未読み出しの stderr により無限にブロックする可能性があった
+  - `anyio` は直接依存ではなく `httpx` / `openai` / `anthropic` 経由で導入されるため、下限は `pyproject.toml` の `[tool.uv]` `constraint-dependencies` として宣言する
+  - `uv.lock` を再生成: `anyio` 4.13.0 → 4.15.1、`typing-extensions` は Python バージョンで分岐（3.15 以上は 4.15.0、未満は 4.16.0）
+
 ## [0.5.1] - 2026-08-09
 
 `add-line-numbers` の git 参照をリリースタグに固定しました。実装および各コマンドの出力に変更はありません。

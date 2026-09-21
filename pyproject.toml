@@ -27,6 +27,14 @@ dependencies = [
     "add-line-numbers>=0.1.3",
 ]
 
+[tool.uv]
+# Security: raise the floor of the transitive dependency `anyio`
+# (pulled in via httpx / openai / anthropic). Versions < 4.14.2 encode host names
+# with IDNA 2003 in TLSStream, enabling TLS certificate spoofing
+# (GHSA-82r6-8w77-94w6 / CVE-2026-63374), and process-pool workers can block
+# indefinitely on undrained stderr (GHSA-5p39-cfhj-2xmp / CVE-2026-64847).
+constraint-dependencies = ["anyio>=4.14.2"]
+
 [tool.uv.sources]
 # NOTE: このリポジトリで uv を使う場合、`add-line-numbers` は公開リポジトリから取得する。
 # `[project.dependencies]` 側にも残し、実行時依存として明示する。
