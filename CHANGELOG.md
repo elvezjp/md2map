@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [GHSA-5p39-cfhj-2xmp](https://github.com/advisories/GHSA-5p39-cfhj-2xmp) (medium, CVE-2026-64847): process-pool workers could block indefinitely on undrained stderr
   - `anyio` is not a direct dependency; it is pulled in through `httpx` / `openai` / `anthropic`, so the floor is declared as a `[tool.uv]` `constraint-dependencies` entry in `pyproject.toml`
   - `uv.lock` regenerated: `anyio` 4.13.0 → 4.15.1, and `typing-extensions` split per Python version (4.15.0 for 3.15+, 4.16.0 below it)
+- **Raised the floor of the transitive dependencies `certifi` and `urllib3`** (Dependabot [#74](https://github.com/elvezjp/md2map/security/dependabot/74))
+  - [GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2) (critical): `certifi` < 2026.10.18 bundled emSign root CAs whose intermediate CA keys were compromised
+  - [GHSA-vxq7-64xx-v4gw](https://github.com/advisories/GHSA-vxq7-64xx-v4gw) (high) / [GHSA-gh4c-6fx4-qh6g](https://github.com/advisories/GHSA-gh4c-6fx4-qh6g) (medium): `urllib3` < 2.8.0 could buffer an unbounded chunk-size line into memory, and could loop forever on chunked deflate streams
+  - Both are declared as `[tool.uv]` `constraint-dependencies` (`certifi>=2026.10.18`, `urllib3>=2.8.0`) in `pyproject.toml`
+  - `uv.lock` regenerated: `certifi` 2026.5.20 → 2026.10.23, `urllib3` 2.7.0 → 2.8.0
 
 ## [0.5.1] - 2026-08-09
 
