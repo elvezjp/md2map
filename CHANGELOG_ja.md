@@ -16,6 +16,11 @@
   - [GHSA-5p39-cfhj-2xmp](https://github.com/advisories/GHSA-5p39-cfhj-2xmp)（medium、CVE-2026-64847）: プロセスプールのワーカーが未読み出しの stderr により無限にブロックする可能性があった
   - `anyio` は直接依存ではなく `httpx` / `openai` / `anthropic` 経由で導入されるため、下限は `pyproject.toml` の `[tool.uv]` `constraint-dependencies` として宣言する
   - `uv.lock` を再生成: `anyio` 4.13.0 → 4.15.1、`typing-extensions` は Python バージョンで分岐（3.15 以上は 4.15.0、未満は 4.16.0）
+- **推移的依存の `certifi` と `urllib3` の下限を引き上げ**（Dependabot [#74](https://github.com/elvezjp/md2map/security/dependabot/74)）
+  - [GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2)（critical）: `certifi` < 2026.10.18 が、中間 CA の鍵が漏えいした emSign のルート CA を同梱していた
+  - [GHSA-vxq7-64xx-v4gw](https://github.com/advisories/GHSA-vxq7-64xx-v4gw)（high）/ [GHSA-gh4c-6fx4-qh6g](https://github.com/advisories/GHSA-gh4c-6fx4-qh6g)（medium）: `urllib3` < 2.8.0 で、チャンクサイズ行を上限なくメモリに読み込む可能性と、Deflate のチャンクストリーミングで無限ループに陥る可能性があった
+  - いずれも `pyproject.toml` の `[tool.uv]` `constraint-dependencies`（`certifi>=2026.10.18`、`urllib3>=2.8.0`）として宣言する
+  - `uv.lock` を再生成: `certifi` 2026.5.20 → 2026.10.23、`urllib3` 2.7.0 → 2.8.0
 
 ## [0.5.1] - 2026-08-09
 
